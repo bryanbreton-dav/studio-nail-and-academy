@@ -1,0 +1,36 @@
+@import "tailwindcss";
+
+@theme {
+  --color-institut-pink: #FDF7F4;  /* Fond rose poudré très doux */
+  --color-institut-gold: #D4AF37;  /* Doré pour les boutons/actions */
+  --color-institut-dark: #2C2A29;  /* Gris très foncé pour les textes */
+}
+
+/* Personnalisation de FullCalendar aux couleurs de l'institut */
+.admin-calendar .fc {
+  font-family: inherit;
+}
+.admin-calendar .fc-col-header-cell {
+  background-color: #f9fafb;
+  text-transform: uppercase;
+  font-size: 10px;
+  letter-spacing: 0.05em;
+  padding: 8px 0 !important;
+}
+.admin-calendar .fc-event {
+  cursor: pointer;
+  padding: 2px 4px;
+  font-size: 11px;
+  border-radius: 2px;
+}
+.admin-calendar .fc-button-primary {
+  background-color: #1e293b !important;
+  border-color: #1e293b !important;
+  text-transform: uppercase;
+  font-size: 10px !important;
+  letter-spacing: 0.05em;
+}
+.admin-calendar .fc-button-primary:hover {
+  background-color: #d97706 !important;
+  border-color: #d97706 !important;
+}

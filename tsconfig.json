@@ -1,0 +1,11 @@
+{
+  "files": [],
+  "compilerOptions": {
+    /* Ajoute ou modifie cette ligne là */
+    "types": ["vite/client"]
+  },
+  "references": [
+    { "path": "./tsconfig.app.json" },
+    { "path": "./tsconfig.node.json" }
+  ]
+}
