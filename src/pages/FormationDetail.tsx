@@ -218,12 +218,37 @@ export default function FormationDetail() {
         montantAcompte: formation.acompte
       };
 
+      // 1. Enregistrement en base de données
       await addDoc(collection(db, "reservations"), newReservation);
 
+      // 2. Déclenchement de l'envoi des e-mails via Brevo
+      try {
+        await fetch("https://us-central1-studio-nails-586ea.cloudfunctions.net/sendReservationEmails ", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            clientEmail: email,
+            clientPrenom: prenom,
+            clientNom: nom,
+            formationTitle: formation.title,
+            dateSession: selectedDate,
+            acompteAmount: formation.acompte,
+          }),
+        });
+      } catch (emailError) {
+        // On isole l'erreur e-mail pour éviter de bloquer l'expérience utilisateur
+        // si le paiement et l'enregistrement Firestore ont fonctionné.
+        console.error("L'enregistrement a réussi, mais l'envoi de l'e-mail a échoué :", emailError);
+      }
+
+      // 3. Nettoyage de l'interface utilisateur
       alert(`Paiement validé ! Merci ${prenom}, votre place est officiellement réservée.`);
       setShowModal(false);
       setNom(""); setPrenom(""); setEmail(""); setPhone(""); setAdresse("");
 
+      // 4. Rafraîchissement des places disponibles
       const q = query(collection(db, "reservations"), where("formationId", "==", formation.id));
       const resSnap = await getDocs(q);
       setAllReservations(resSnap.docs.map(d => d.data()));
