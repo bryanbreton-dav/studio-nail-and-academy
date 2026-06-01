@@ -1,27 +1,58 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { db } from '../../firebase';
-import { doc, getDoc, collection, addDoc, getDocs, query, where } from 'firebase/firestore';
+import { doc, getDoc, collection, addDoc, getDocs, query, where, type DocumentData } from 'firebase/firestore';
 
 // IMPORTS STRIPE
-// 1. Importe le TYPE depuis @stripe/stripe-js
 import { loadStripe, type StripeElementsOptions } from '@stripe/stripe-js';
+import { Elements, useStripe, useElements, PaymentElement } from '@stripe/react-stripe-js';
 
-// 2. Importe les COMPOSANTS depuis @stripe/react-stripe-js
-import { Elements, useStripe, useElements, PaymentElement } from '@stripe/react-stripe-js';// TODO: Remplacer par ta propre clé publique Stripe (Test ou Live)
-// public key, on peut l'afficher c ok
 const stripePromise = loadStripe('pk_test_51TWYLHACwq5EuLNNbv6lPGtm3YlUbuxdo6hzQc2bmfsJ1xz7SZYIQcXTU1kqT9a8mN1qDs9P0mxDhoKwU2QsMVgH00cslvgugn');
+
+// 1. DÉFINITION DES INTERFACES (TYPES)
+interface Formation {
+  id: string;
+  title: string;
+  intro: string;
+  imageUrl?: string;
+  objectifs?: string;
+  program: string;
+  priceTotal: number | string;
+  acompte: number | string;
+  maxPlaces?: number;
+  dates?: string[];
+}
+
+interface Reservation {
+  formationId: string;
+  formationTitle: string;
+  dateSession: string;
+  clientNom: string;
+  clientPrenom: string;
+  clientEmail: string;
+  clientPhone: string;
+  clientAdresse: string;
+  createdAt: string;
+  statutPaiement: string;
+  stripePaymentId: string;
+  montantAcompte: number | string;
+}
 
 // ==========================================
 // SUB-COMPOSANT : FORMULAIRE DE CARTE BANCAIRE
 // ==========================================
-function CheckoutForm({ onPaymentSuccess, acompteAmount }) {
+interface CheckoutFormProps {
+  onPaymentSuccess: (id: string) => void;
+  acompteAmount: number | string;
+}
+
+function CheckoutForm({ onPaymentSuccess, acompteAmount }: CheckoutFormProps) {
   const stripe = useStripe();
   const elements = useElements();
-  const [errorMessage, setErrorMessage] = useState(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null); // Fix Error 1
   const [isProcessing, setIsProcessing] = useState(false);
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!stripe || !elements) return;
 
@@ -34,7 +65,7 @@ function CheckoutForm({ onPaymentSuccess, acompteAmount }) {
     });
 
     if (error) {
-      setErrorMessage(error.message);
+      setErrorMessage(error.message ?? "Une erreur inconnue est survenue"); // Fix optionnel sécurisé
       setIsProcessing(false);
     } else if (paymentIntent && paymentIntent.status === 'succeeded') {
       onPaymentSuccess(paymentIntent.id);
@@ -68,13 +99,12 @@ function CheckoutForm({ onPaymentSuccess, acompteAmount }) {
 // COMPOSANT PRINCIPAL : DETAIL DE FORMATION
 // ==========================================
 export default function FormationDetail() {
-  const { id } = useParams();
-  const [formation, setFormation] = useState(null);
-  const [allReservations, setAllReservations] = useState([]);
+  const { id } = useParams<{ id: string }>(); // Précise que l'id est une string
+  const [formation, setFormation] = useState<Formation | null>(null); // Type explicite au lieu de null strict
+  const [allReservations, setAllReservations] = useState<DocumentData[]>([]); // Type pour Firestore data
   const [loading, setLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState("");
 
-  // Gestion Modale & Étapes (1: Coordonnées, 2: Stripe)
   const [showModal, setShowModal] = useState(false);
   const [modalStep, setModalStep] = useState(1);
   const [nom, setNom] = useState("");
@@ -84,15 +114,16 @@ export default function FormationDetail() {
   const [adresse, setAdresse] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
-  // Intégration Stripe Secret
   const [stripeClientSecret, setStripeClientSecret] = useState("");
 
   useEffect(() => {
     const fetchDocAndReservations = async () => {
+      if (!id) return; // Sécurité TypeScript pour doc()
+
       const docRef = doc(db, "formations", id);
       const snap = await getDoc(docRef);
       if (snap.exists()) {
-        setFormation({ id: snap.id, ...snap.data() });
+        setFormation({ id: snap.id, ...snap.data() } as Formation);
 
         const q = query(collection(db, "reservations"), where("formationId", "==", snap.id));
         const resSnap = await getDocs(q);
@@ -132,23 +163,20 @@ export default function FormationDetail() {
     setShowModal(true);
   };
 
-  // APPEL BACKEND : ÉTAPE 1 VERS ÉTAPE 2
-  // APPEL BACKEND : ÉTAPE 1 VERS ÉTAPE 2
   const handleInfoSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!formation) return; // Sécurise le fait que formation n'est pas null
     if (!nom || !prenom || !email || !phone || !adresse) return alert("Champs requis.");
 
     setSubmitting(true);
     try {
-      // APPEL À TA FIREBASE CLOUD FUNCTION
-      // Remplace l'URL ci-dessous par l'URL fournie par Firebase après ton déploiement
       const response = await fetch("https://us-central1-studio-nails-586ea.cloudfunctions.net/createPaymentIntent", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          acompteAmount: formation.acompte, // Montant brut (ex: 150)
+          acompteAmount: formation.acompte,
           email: email,
           formationTitle: formation.title,
         }),
@@ -160,7 +188,6 @@ export default function FormationDetail() {
         throw new Error(data.error || "Erreur lors de la récupération du secret de paiement.");
       }
 
-      // On stocke le vrai jeton reçu de Stripe et on passe à l'affichage de la carte
       setStripeClientSecret(data.clientSecret);
       setModalStep(2);
 
@@ -171,10 +198,12 @@ export default function FormationDetail() {
       setSubmitting(false);
     }
   };
-  // CALLBACK : SUCCÈS TRANSACTION STRIPE ET ENREGISTREMENT FIREBASE
-  const handlePaymentSuccess = async (paymentIntentId) => {
+
+  const handlePaymentSuccess = async (paymentIntentId: string) => {
+    if (!formation) return; // Double sécurité anti-null
+    
     try {
-      await addDoc(collection(db, "reservations"), {
+      const newReservation: Reservation = {
         formationId: formation.id,
         formationTitle: formation.title,
         dateSession: selectedDate,
@@ -187,13 +216,14 @@ export default function FormationDetail() {
         statutPaiement: "Payé",
         stripePaymentId: paymentIntentId,
         montantAcompte: formation.acompte
-      });
+      };
+
+      await addDoc(collection(db, "reservations"), newReservation);
 
       alert(`Paiement validé ! Merci ${prenom}, votre place est officiellement réservée.`);
       setShowModal(false);
       setNom(""); setPrenom(""); setEmail(""); setPhone(""); setAdresse("");
 
-      // Rafraîchir les compteurs immédiatement
       const q = query(collection(db, "reservations"), where("formationId", "==", formation.id));
       const resSnap = await getDocs(q);
       setAllReservations(resSnap.docs.map(d => d.data()));
@@ -212,6 +242,7 @@ export default function FormationDetail() {
     );
   }
 
+  // Idéalement placé ici : si on passe cette ligne, "formation" N'EST PLUS NULL pour le reste du composant (TypeScript le comprend grâce au "return")
   if (!formation) {
     return (
       <div className="min-h-screen bg-[#FAF9F6] flex flex-col items-center justify-center space-y-4">
@@ -221,13 +252,12 @@ export default function FormationDetail() {
     );
   }
 
-  const formatList = (text) => text ? text.split('\n').filter(line => line.trim() !== "") : [];
+  const formatList = (text: string) => text ? text.split('\n').filter(line => line.trim() !== "") : [];
 
-  // Configuration graphique unifiée de l'iframe Stripe Elements
   const stripeOptions: StripeElementsOptions = {
     clientSecret: stripeClientSecret,
     appearance: {
-      theme: 'flat' as const, // Le "as const" est crucial pour que TS comprenne que c'est le thème 'flat' exact, pas n'importe quelle string
+      theme: 'flat' as const,
       variables: {
         fontFamily: 'ui-sans-serif, system-ui, sans-serif',
         colorPrimary: '#1C1A17',
@@ -240,7 +270,6 @@ export default function FormationDetail() {
 
   return (
     <div className="bg-[#FAF9F6] text-[#1C1A17] font-sans min-h-screen selection:bg-[#E6DCD2] pb-32">
-
       {/* HEADER DE LA FORMATION */}
       <div className="max-w-6xl mx-auto px-6 pt-12">
         <Link to="/" className="text-[10px] text-neutral-400 hover:text-[#C5A880] transition-colors uppercase tracking-[0.25em] inline-flex items-center gap-2 group mb-12">
@@ -261,7 +290,6 @@ export default function FormationDetail() {
 
       {/* BLOCS CONTENUS GRILLE */}
       <div className="max-w-6xl mx-auto px-6 grid lg:grid-cols-12 gap-12 items-start">
-
         {/* PRESENTATION */}
         <div className="lg:col-span-7 space-y-16">
           <div className="overflow-hidden rounded-2xl shadow-md aspect-video bg-white">
@@ -340,7 +368,7 @@ export default function FormationDetail() {
         </div>
       </div>
 
-      {/* POP-IN DOUBLE ÉTAPE (PROFIL -> STRIPE) */}
+      {/* POP-IN DOUBLE ÉTAPE */}
       {showModal && (
         <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in">
           <div className="bg-[#FAF9F6] p-8 max-w-lg w-full rounded-3xl shadow-2xl space-y-6 border border-neutral-200/40 relative">
@@ -391,7 +419,7 @@ export default function FormationDetail() {
               </>
             )}
 
-            {/* ÉTAPE 2 : PAIEMENT STRIPE INTEGRÉ (SANS REDIRECTION) */}
+            {/* ÉTAPE 2 : PAIEMENT STRIPE INTEGRÉ */}
             {modalStep === 2 && stripeClientSecret && (
               <>
                 <div className="space-y-1.5 border-b border-neutral-200 pb-4">
@@ -399,15 +427,12 @@ export default function FormationDetail() {
                   <p className="text-[10px] font-light text-neutral-400">Candidat : <span className="font-semibold text-neutral-700">{prenom} {nom}</span></p>
                 </div>
 
-                {/* 2. On s'assure en plus que la simulation ou le vrai token ne soit pas une chaîne vide */}
-                {stripeClientSecret !== "" && (
-                  <Elements stripe={stripePromise} options={stripeOptions}>
-                    <CheckoutForm
-                      acompteAmount={formation.acompte}
-                      onPaymentSuccess={handlePaymentSuccess}
-                    />
-                  </Elements>
-                )}
+                <Elements stripe={stripePromise} options={stripeOptions}>
+                  <CheckoutForm
+                    acompteAmount={formation.acompte}
+                    onPaymentSuccess={handlePaymentSuccess}
+                  />
+                </Elements>
 
                 <button
                   onClick={() => setModalStep(1)}

@@ -1,11 +1,23 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { db } from '../../firebase';
 import { collection, getDocs } from 'firebase/firestore';
 import nathalieImage from '../assets/nathalie_rozen.jpg';
 
+// Optionnel mais recommandé : On définit la forme d'une formation pour TypeScript
+interface Formation {
+  id: string;
+  title?: string;
+  program?: string;
+  imageUrl?: string;
+  duration?: string;
+  priceTotal?: number | string;
+  dates?: string[];
+}
+
 export default function Home() {
-  const [formations, setFormations] = useState([]);
+  // CORRECTION ICI : On dit à TypeScript que c'est un tableau de Formations (ou n'importe quel objet)
+  const [formations, setFormations] = useState<Formation[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -15,7 +27,8 @@ export default function Home() {
         const docs = querySnapshot.docs.map(doc => ({
           id: doc.id,
           ...doc.data()
-        }));
+        })) as Formation[]; // On force le type ici pour l'aligner avec le state
+        
         setFormations(docs);
       } catch (error) {
         console.error("Erreur lors du chargement des formations :", error);
@@ -33,14 +46,12 @@ export default function Home() {
           1. HERO SECTION (ÉDITORIALE & IMMERSIVE)
          ========================================== */}
       <section className="relative h-screen min-h-[650px] flex items-center justify-center px-4 overflow-hidden">
-        {/* Image de fond avec parallaxe doux et filtre feutré */}
         <div
           className="absolute inset-0 bg-cover bg-center scale-105 animate-[subtle-zoom_20s_infinite_alternate]"
           style={{ backgroundImage: "url('https://images.unsplash.com/photo-1604654894610-df63bc536371?auto=format&fit=crop&w=2000&q=90')" }}
         ></div>
         <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/40 to-[#FAF9F6]"></div>
         
-        {/* Contenu textuel centré */}
         <div className="relative z-10 text-center space-y-6 max-w-4xl mx-auto text-white">
           <span className="text-[11px] font-semibold uppercase tracking-[0.3em] text-[#E6DCD2] block animate-fade-in">
             Studio Nail Academy and formations
@@ -54,7 +65,7 @@ export default function Home() {
           </p>
           <div className="pt-6">
             <a 
-              href="#catalogue" 
+              href="#formations" 
               className="inline-block bg-white hover:bg-[#1C1A17] text-[#1C1A17] hover:text-white border border-white px-10 py-4 text-[11px] uppercase tracking-[0.2em] font-semibold transition-all duration-500 rounded-none shadow-xs"
             >
               Explorer le catalogue
@@ -62,7 +73,6 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Ligne esthétique indiquant le scroll */}
         <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center space-y-2 opacity-50">
           <span className="text-[9px] uppercase tracking-widest text-neutral-600">Scroll</span>
           <div className="w-[1px] h-12 bg-neutral-400 animate-[pulse_2s_infinite]"></div>
@@ -103,7 +113,6 @@ export default function Home() {
           </div>
         </div>
         
-        {/* Bloc image asymétrique */}
         <div className="md:col-span-5 relative justify-self-center md:justify-self-end w-full max-w-md mt-8 md:mt-12 sticky top-8">
           <div className="absolute inset-0 bg-[#E6DCD2] rounded-3xl translate-x-4 translate-y-4 -z-10 transition-transform duration-700 group-hover:translate-x-6"></div>
           <div className="relative overflow-hidden rounded-2xl shadow-xl aspect-[3/4] bg-white">
@@ -153,20 +162,17 @@ export default function Home() {
               return (
                 <div key={formation.id} className="group flex flex-col space-y-5 bg-transparent">
                   
-                  {/* Conteneur Image à bords adoucis et effet zoom fluide */}
                   <div className="h-80 bg-neutral-100 rounded-2xl overflow-hidden relative shadow-xs group-hover:shadow-xl transition-all duration-700">
                     <img
                       src={formation.imageUrl || "https://images.unsplash.com/photo-1604654894610-df63bc536371?auto=format&fit=crop&w=600&q=80"}
-                      alt={formation.title}
+                      alt={formation.title || "Formation"}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-[1.2s] ease-out"
                     />
-                    {/* Badge Durée Minimaliste */}
                     <div className="absolute bottom-4 left-4 backdrop-blur-md bg-black/40 text-white text-[9px] uppercase tracking-[0.15em] font-medium px-3 py-1.5 rounded-full">
                       ⏳ {formation.duration}
                     </div>
                   </div>
 
-                  {/* Bloc descriptif raffiné */}
                   <div className="flex flex-col flex-grow space-y-3 px-1">
                     <div className="flex justify-between items-baseline">
                       <span className="text-[9px] font-bold uppercase tracking-[0.25em] text-[#C5A880]">
@@ -185,7 +191,6 @@ export default function Home() {
                       {premiereLigneProgramme}
                     </p>
 
-                    {/* Prochaines sessions de style épuré */}
                     <div className="pt-3 border-t border-neutral-200/60 space-y-2">
                       <span className="text-[9px] uppercase tracking-wider font-semibold text-neutral-400 block">
                         Ouverture des sessions :
@@ -208,7 +213,6 @@ export default function Home() {
                       </div>
                     </div>
 
-                    {/* Bouton d'action "Bord à bord" ou Outline chic */}
                     <div className="pt-4">
                       <Link
                         to={`/formation/${formation.id}`}
@@ -233,7 +237,6 @@ export default function Home() {
         <div className="max-w-6xl mx-auto px-6 py-20">
           <div className="grid md:grid-cols-12 gap-16 items-center">
 
-            {/* Informations pratiques stylisées */}
             <div className="md:col-span-5 space-y-8">
               <div className="space-y-2">
                 <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-[#C5A880] block">
@@ -254,7 +257,6 @@ export default function Home() {
                 </p>
               </div>
 
-              {/* Réseaux Sociaux Epurés */}
               <div className="space-y-3">
                 <p className="text-[9px] uppercase tracking-widest text-neutral-500 font-semibold">Suivre nos coulisses :</p>
                 <div className="flex gap-3">
@@ -280,7 +282,6 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Google Maps avec masque adoucissant */}
             <div className="md:col-span-7 w-full h-80 rounded-2xl overflow-hidden shadow-2xl border border-neutral-800 bg-neutral-900 opacity-80 hover:opacity-100 transition-opacity duration-500">
               <iframe
                 title="Google Maps Studio Nail"

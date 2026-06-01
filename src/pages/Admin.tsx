@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { db, storage } from '../../firebase';
 import { collection, addDoc, getDocs, doc, updateDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
@@ -11,38 +11,86 @@ import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import interactionPlugin from '@fullcalendar/interaction';
 
+// 1. DÉFINITION DES INTERFACES (TYPES)
+interface SessionDetail {
+  id: string;
+  startDate: string;
+  endDate: string;
+  textLabel: string;
+}
+
+interface Formation {
+  id: string;
+  title: string;
+  duration: string;
+  priceTotal: string;
+  acompte: number;
+  maxPlaces: number;
+  imageUrl?: string;
+  intro?: string;
+  objectifs?: string;
+  program?: string;
+  prerequis?: string;
+  modalites?: string;
+  evaluation?: string;
+  financement?: string;
+  lesPlus?: string;
+  dates?: string[];
+  sessionsDetails?: SessionDetail[];
+}
+
+interface Reservation {
+  id: string;
+  formationId: string;
+  dateSession: string;
+  clientPrenom: string;
+  clientNom: string;
+  clientEmail: string;
+  clientPhone: string;
+  clientAdresse: string;
+  statutPaiement: string;
+}
+
+interface ActiveSessionInfo {
+  formationId: string;
+  formationTitle: string;
+  dateLabel: string;
+}
+
 export default function Admin() {
-  const [formations, setFormations] = useState([]);
-  const [reservations, setReservations] = useState([]);
-  const [loading, setLoading] = useState(true);
+  // APPLICATION DES TYPES AUX STATES
+  const [formations, setFormations] = useState<Formation[]>([]);
+  const [reservations, setReservations] = useState<Reservation[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
   const navigate = useNavigate();
 
   // ÉTATS FORMULAIRE CATALOGUE
-  const [isEditing, setIsEditing] = useState(false);
-  const [currentId, setCurrentId] = useState("");
-  const [title, setTitle] = useState("");
-  const [duration, setDuration] = useState("");
-  const [price, setPrice] = useState("");
-  const [acompte, setAcompte] = useState("");
-  const [imageFile, setImageFile] = useState(null);
-  const [imageUrl, setImageUrl] = useState("");
-  const [uploading, setUploading] = useState(false);
-  const [intro, setIntro] = useState("");
-  const [objectifs, setObjectifs] = useState("");
-  const [program, setProgram] = useState(""); 
-  const [prerequis, setPrerequis] = useState("");
-  const [modalites, setModalites] = useState("");
-  const [evaluation, setEvaluation] = useState("");
-  const [financement, setFinancement] = useState("");
-  const [lesPlus, setLesPlus] = useState("");
-  const [maxPlaces, setMaxPlaces] = useState("");
+  const [isEditing, setIsEditing] = useState<boolean>(false);
+  const [currentId, setCurrentId] = useState<string>("");
+  const [title, setTitle] = useState<string>("");
+  const [duration, setDuration] = useState<string>("");
+  const [price, setPrice] = useState<string>("");
+  const [acompte, setAcompte] = useState<string>("");
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imageUrl, setImageUrl] = useState<string>("");
+  const [uploading, setUploading] = useState<boolean>(false);
+  const [intro, setIntro] = useState<string>("");
+  const [objectifs, setObjectifs] = useState<string>("");
+  const [program, setProgram] = useState<string>(""); 
+  const [prerequis, setPrerequis] = useState<string>("");
+  const [modalites, setModalites] = useState<string>("");
+  const [evaluation, setEvaluation] = useState<string>("");
+  const [financement, setFinancement] = useState<string>("");
+  const [lesPlus, setLesPlus] = useState<string>("");
+  const [maxPlaces, setMaxPlaces] = useState<string>("");
+
   // ÉTATS AJOUT SESSIONS (CALENDRIER)
-  const [selectedFormationId, setSelectedFormationId] = useState("");
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
+  const [selectedFormationId, setSelectedFormationId] = useState<string>("");
+  const [startDate, setStartDate] = useState<string>("");
+  const [endDate, setEndDate] = useState<string>("");
 
   // ÉTATS POUR L'AFFICHAGE DES ÉLÈVES DE LA SESSION SÉLECTIONNÉE
-  const [activeSessionInfo, setActiveSessionInfo] = useState(null);
+  const [activeSessionInfo, setActiveSessionInfo] = useState<ActiveSessionInfo | null>(null);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -55,9 +103,11 @@ export default function Admin() {
   const fetchData = async () => {
     try {
       const snapFormations = await getDocs(collection(db, "formations"));
-      setFormations(snapFormations.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+      setFormations(snapFormations.docs.map(doc => ({ id: doc.id, ...doc.data() }) as Formation));
+      
       const snapReservations = await getDocs(collection(db, "reservations"));
-      setReservations(snapReservations.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+      setReservations(snapReservations.docs.map(doc => ({ id: doc.id, ...doc.data() }) as Reservation));
+      
       setLoading(false);
     } catch (error) {
       console.error(error);
@@ -72,7 +122,7 @@ export default function Admin() {
     }
   };
 
-  const handleUploadImage = async (file) => {
+  const handleUploadImage = async (file: File): Promise<string> => {
     if (!file) return "";
     setUploading(true);
     try {
@@ -88,7 +138,7 @@ export default function Admin() {
     }
   };
 
-  const handleSaveFormation = async (e) => {
+  const handleSaveFormation = async (e: React.FormEvent) => {
     e.preventDefault();
     let finalImageUrl = imageUrl;
     if (imageFile) finalImageUrl = await handleUploadImage(imageFile);
@@ -109,10 +159,10 @@ export default function Admin() {
     alert("Formation enregistrée !");
   };
 
-  const handleEditClick = (f) => {
+  const handleEditClick = (f: Formation) => {
     setIsEditing(true); setCurrentId(f.id);
-    setTitle(f.title); setDuration(f.duration); setPrice(f.priceTotal); setAcompte(f.acompte);
-    setImageUrl(f.imageUrl || ""); setImageFile(null); setMaxPlaces(f.maxPlaces || "");
+    setTitle(f.title); setDuration(f.duration); setPrice(f.priceTotal); setAcompte(String(f.acompte));
+    setImageUrl(f.imageUrl || ""); setImageFile(null); setMaxPlaces(String(f.maxPlaces) || "");
     setIntro(f.intro || ""); setObjectifs(f.objectifs || ""); setProgram(f.program || "");
     setPrerequis(f.prerequis || ""); setModalites(f.modalites || "");
     setEvaluation(f.evaluation || ""); setFinancement(f.financement || ""); setLesPlus(f.lesPlus || "");
@@ -125,8 +175,7 @@ export default function Admin() {
     setEvaluation(""); setFinancement(""); setLesPlus("");
   };
 
-  // FORMATAGE TEXTE POUR LE CLIENT
-  const formatDatesRange = (start, end) => {
+  const formatDatesRange = (start: string, end: string) => {
     if (!start) return "";
     const options = { day: 'numeric', month: 'long', year: 'numeric' } as const;
     const dateDebut = new Date(start).toLocaleDateString('fr-FR', options);
@@ -137,16 +186,16 @@ export default function Admin() {
     return `Le ${dateDebut}`;
   };
 
-  // PLANIFIER UNE NOUVELLE SESSION
-  const handleAddDate = async (e) => {
+  const handleAddDate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedFormationId || !startDate) return alert("Champs obligatoires manquants.");
     
-    const dateFormatee = formatDatesRange(startDate, endDate);
     const targetFormation = formations.find(form => form.id === selectedFormationId);
+    if (!targetFormation) return alert("Formation introuvable.");
+
+    const dateFormatee = formatDatesRange(startDate, endDate);
     
-    // Structure pour le calendrier FullCalendar
-    const newSessionObj = {
+    const newSessionObj: SessionDetail = {
       id: `${selectedFormationId}_${Date.now()}`,
       startDate: startDate,
       endDate: endDate || startDate,
@@ -165,13 +214,11 @@ export default function Admin() {
     alert("Session ajoutée au calendrier visuel !");
   };
 
-  // COMPILER LES ÉVÉNEMENTS POUR FULLCALENDAR
   const getCalendarEvents = () => {
-    const events = [];
+    const events: any[] = [];
     formations.forEach(f => {
       if (f.sessionsDetails) {
         f.sessionsDetails.forEach(session => {
-          // FullCalendar s'arrête le jour "end" à 00h00. Pour étaler la ligne sur le dernier jour inclus, on ajoute +1 jour au calendrier visuel
           const visualEndDate = new Date(session.endDate);
           visualEndDate.setDate(visualEndDate.getDate() + 1);
 
@@ -184,8 +231,8 @@ export default function Admin() {
               formationId: f.id,
               textLabel: session.textLabel
             },
-            backgroundColor: '#1e293b', // Couleur ardoise élégante
-            borderColor: '#d97706',     // Bordure or/dorée
+            backgroundColor: '#1e293b',
+            borderColor: '#d97706',
             textColor: '#ffffff'
           });
         });
@@ -194,8 +241,7 @@ export default function Admin() {
     return events;
   };
 
-  // AU CLIC SUR UNE LIGNE DU CALENDRIER
-  const handleEventClick = (info) => {
+  const handleEventClick = (info: any) => {
     const { formationId, textLabel } = info.event.extendedProps;
     setActiveSessionInfo({
       formationId,
@@ -204,7 +250,6 @@ export default function Admin() {
     });
   };
 
-  // Filtrer les élèves selon la session cliquée sur le calendrier
   const elevesInscrits = activeSessionInfo 
     ? reservations.filter(r => r.formationId === activeSessionInfo.formationId && r.dateSession === activeSessionInfo.dateLabel)
     : [];
@@ -221,16 +266,14 @@ export default function Admin() {
         </button>
       </div>
 
-      {/* SECTION DU VRAI CALENDRIER INTERACTIF */}
       <section className="grid lg:grid-cols-3 gap-8 items-start">
-        {/* Le Calendrier à gauche */}
         <div className="lg:col-span-2 bg-white p-6 border shadow-sm rounded-sm admin-calendar">
           <h2 className="text-sm font-bold uppercase tracking-wider mb-4 text-institut-dark border-b pb-2">🗓 Planning Général des Sessions</h2>
           <FullCalendar
             plugins={[dayGridPlugin, interactionPlugin]}
             initialView="dayGridMonth"
             locale="fr"
-            firstDay={1} // Commence le lundi
+            firstDay={1}
             buttonText={{ today: "Aujourd'hui" }}
             events={getCalendarEvents()}
             eventClick={handleEventClick}
@@ -239,7 +282,6 @@ export default function Admin() {
           <p className="text-[10px] text-gray-400 mt-2 italic">👉 Cliquez sur une barre de formation pour charger sa liste d'élèves à droite.</p>
         </div>
 
-        {/* Panneau latéral de la session cliquée à droite */}
         <div className="bg-slate-900 text-white p-6 rounded-sm shadow-md space-y-4 h-full min-h-[400px]">
           <h2 className="text-sm font-bold uppercase tracking-wider text-institut-gold border-b border-gray-700 pb-2">👥 Liste d'Émargement</h2>
           
@@ -274,7 +316,6 @@ export default function Admin() {
         </div>
       </section>
 
-      {/* FORMULAIRES DE CONFIGURATION (BAS DE PAGE) */}
       <div className="grid lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-6">
           <form onSubmit={handleSaveFormation} className="bg-white p-8 border space-y-4 shadow-sm">
@@ -298,7 +339,17 @@ export default function Admin() {
               <label htmlFor="file-upload" className="cursor-pointer bg-white hover:bg-institut-dark text-institut-dark hover:text-white border border-institut-dark px-4 py-2 rounded-xs font-semibold uppercase tracking-wider text-[10px] transition shadow-xs inline-block">
                 {imageFile ? "🔄 Changer d'image" : "📁 Choisir une image sur mon PC"}
               </label>
-              <input id="file-upload" type="file" accept="image/*" onChange={(e) => setImageFile(e.target.files[0])} className="hidden" />
+              <input 
+                id="file-upload" 
+                type="file" 
+                accept="image/*" 
+                onChange={(e) => {
+                  if (e.target.files && e.target.files.length > 0) {
+                    setImageFile(e.target.files[0]);
+                  }
+                }} 
+                className="hidden" 
+              />
               {imageFile && <p className="text-[10px] text-gray-600 font-medium italic mt-2">Sélectionné : {imageFile.name}</p>}
             </div>
 
@@ -317,7 +368,6 @@ export default function Admin() {
             </button>
           </form>
 
-          {/* CATALOGUE */}
           <div className="bg-white p-6 border">
             <h2 className="font-bold mb-4 uppercase">Catalogue Actuel</h2>
             <div className="space-y-3">
@@ -337,7 +387,6 @@ export default function Admin() {
           </div>
         </div>
 
-        {/* PLANIFICATEUR DE SESSIONS (LIÉ AU COMPORTEMENT DU CALENDRIER DU HAUT) */}
         <div className="bg-white p-6 border h-fit sticky top-24 shadow-sm space-y-4">
           <h2 className="font-bold uppercase border-b pb-2">🗓 Planifier une session</h2>
           <form onSubmit={handleAddDate} className="space-y-4">

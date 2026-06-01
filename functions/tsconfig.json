@@ -4,6 +4,7 @@
     "esModuleInterop": true,
     "moduleResolution": "nodenext",
     "noImplicitReturns": true,
+    "noImplicitAny": false,
     "noUnusedLocals": true,
     "outDir": "lib",
     "rootDir": "src",

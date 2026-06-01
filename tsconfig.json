@@ -1,6 +1,7 @@
 {
   "files": [],
   "compilerOptions": {
+    "noImplicitAny": false,
     /* Ajoute ou modifie cette ligne là */
     "types": ["vite/client"]
   },

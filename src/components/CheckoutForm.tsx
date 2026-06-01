@@ -1,13 +1,21 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useStripe, useElements, PaymentElement } from '@stripe/react-stripe-js';
 
-export default function CheckoutForm({ onPaymentSuccess, acompteAmount }) {
+// 1. TYPAGE DES PROPS
+interface CheckoutFormProps {
+  onPaymentSuccess: (paymentIntentId: string) => void;
+  acompteAmount: number | string;
+}
+
+export default function CheckoutForm({ onPaymentSuccess, acompteAmount }: CheckoutFormProps) {
   const stripe = useStripe();
   const elements = useElements();
-  const [errorMessage, setErrorMessage] = useState(null);
-  const [isProcessing, setIsProcessing] = useState(false);
+  
+  // 2. TYPAGE DE L'ÉTAT (Peut être string ou null)
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [isProcessing, setIsProcessing] = useState<boolean>(false);
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!stripe || !elements) return;
@@ -22,7 +30,8 @@ export default function CheckoutForm({ onPaymentSuccess, acompteAmount }) {
     });
 
     if (error) {
-      setErrorMessage(error.message);
+      // 3. Fallback au cas où error.message serait undefined
+      setErrorMessage(error.message || "Une erreur inconnue est survenue.");
       setIsProcessing(false);
     } else if (paymentIntent && paymentIntent.status === 'succeeded') {
       // 2. Le paiement est un succès ! On déclenche le callback du composant parent
