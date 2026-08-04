@@ -1,10 +1,9 @@
-import { useState, useEffect } from 'react';
-import { db, storage } from '../../firebase';
+import { useState, useEffect, useRef } from 'react';
+import { db, storage, auth } from '../../firebase';
 import { collection, addDoc, getDocs, doc, updateDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { useNavigate } from 'react-router-dom';
-import { auth } from '../../firebase';
 
 // IMPORTS FULLCALENDAR
 import FullCalendar from '@fullcalendar/react';
@@ -58,11 +57,11 @@ interface ActiveSessionInfo {
 }
 
 export default function Admin() {
-  // APPLICATION DES TYPES AUX STATES
   const [formations, setFormations] = useState<Formation[]>([]);
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const navigate = useNavigate();
+  const formRef = useRef<HTMLFormElement>(null);
 
   // ÉTATS FORMULAIRE CATALOGUE
   const [isEditing, setIsEditing] = useState<boolean>(false);
@@ -156,7 +155,7 @@ export default function Admin() {
       await addDoc(collection(db, "formations"), { ...data, dates: [], sessionsDetails: [] });
     }
     resetForm(); fetchData();
-    alert("Formation enregistrée !");
+    alert("Formation enregistrée avec succès !");
   };
 
   const handleEditClick = (f: Formation) => {
@@ -166,6 +165,8 @@ export default function Admin() {
     setIntro(f.intro || ""); setObjectifs(f.objectifs || ""); setProgram(f.program || "");
     setPrerequis(f.prerequis || ""); setModalites(f.modalites || "");
     setEvaluation(f.evaluation || ""); setFinancement(f.financement || ""); setLesPlus(f.lesPlus || "");
+    // Défilement fluide vers le formulaire
+    formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
   const resetForm = () => {
@@ -231,9 +232,9 @@ export default function Admin() {
               formationId: f.id,
               textLabel: session.textLabel
             },
-            backgroundColor: '#1e293b',
-            borderColor: '#d97706',
-            textColor: '#ffffff'
+            backgroundColor: '#1C1A17',
+            borderColor: '#C5A880',
+            textColor: '#FFFFFF'
           });
         });
       }
@@ -254,164 +255,279 @@ export default function Admin() {
     ? reservations.filter(r => r.formationId === activeSessionInfo.formationId && r.dateSession === activeSessionInfo.dateLabel)
     : [];
 
-  if (loading) return <div className="p-20 text-center">Chargement global...</div>;
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#FAF9F6] flex items-center justify-center text-xs uppercase tracking-[0.25em] text-neutral-400 animate-pulse">
+        Chargement de l'espace d'administration...
+      </div>
+    );
+  }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-12 text-xs space-y-12">
-      
-      <div className="flex justify-between items-center border-b pb-4">
-        <h1 className="text-2xl font-light uppercase tracking-widest">Tableau de Bord Administratif</h1>
-        <button onClick={handleLogout} className="bg-red-50 hover:bg-red-600 text-red-600 hover:text-white border border-red-200 px-3 py-1.5 rounded-xs font-bold uppercase tracking-wider text-[9px] transition cursor-pointer">
-          Se déconnecter ✕
-        </button>
-      </div>
-
-      <section className="grid lg:grid-cols-3 gap-8 items-start">
-        <div className="lg:col-span-2 bg-white p-6 border shadow-sm rounded-sm admin-calendar">
-          <h2 className="text-sm font-bold uppercase tracking-wider mb-4 text-institut-dark border-b pb-2">🗓 Planning Général des Sessions</h2>
-          <FullCalendar
-            plugins={[dayGridPlugin, interactionPlugin]}
-            initialView="dayGridMonth"
-            locale="fr"
-            firstDay={1}
-            buttonText={{ today: "Aujourd'hui" }}
-            events={getCalendarEvents()}
-            eventClick={handleEventClick}
-            height="auto"
-          />
-          <p className="text-[10px] text-gray-400 mt-2 italic">👉 Cliquez sur une barre de formation pour charger sa liste d'élèves à droite.</p>
+    <div className="bg-[#FAF9F6] text-[#1C1A17] font-sans min-h-screen selection:bg-[#E6DCD2] pt-28 pb-32">
+      <div className="max-w-7xl mx-auto px-6 space-y-12">
+        
+        {/* HEADER ADMIN */}
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 border-b border-neutral-200/80 pb-8">
+          <div className="space-y-2">
+            <span className="inline-flex gap-2 bg-[#C5A880]/10 text-[#C5A880] text-[10px] font-semibold px-3.5 py-1.5 rounded-full uppercase tracking-[0.2em]">
+              👑 Administration System
+            </span>
+            <h1 className="text-3xl sm:text-4xl font-extralight tracking-tight text-[#1C1A17]">
+              Tableau de Bord
+            </h1>
+          </div>
+          
+          <button 
+            onClick={handleLogout} 
+            className="w-fit bg-red-50 hover:bg-red-500 hover:text-white border border-red-200 text-red-600 px-5 py-2.5 rounded-xl font-semibold uppercase tracking-[0.15em] text-[10px] transition-all duration-300 shadow-2xs active:scale-95 cursor-pointer"
+          >
+            Déconnexion ✕
+          </button>
         </div>
 
-        <div className="bg-slate-900 text-white p-6 rounded-sm shadow-md space-y-4 h-full min-h-[400px]">
-          <h2 className="text-sm font-bold uppercase tracking-wider text-institut-gold border-b border-gray-700 pb-2">👥 Liste d'Émargement</h2>
+        {/* SECTION CALENDRIER & ÉMARGEMENT */}
+        <section className="grid lg:grid-cols-12 gap-8 items-start">
           
-          {activeSessionInfo ? (
-            <div className="space-y-4">
-              <div className="bg-slate-800 p-3 rounded-xs border-l-2 border-institut-gold">
-                <p className="font-bold text-sm text-white">{activeSessionInfo.formationTitle}</p>
-                <p className="text-[10px] text-gray-300 font-mono mt-1">{activeSessionInfo.dateLabel}</p>
-              </div>
+          {/* CALENDRIER */}
+          <div className="lg:col-span-8 bg-white p-6 sm:p-8 rounded-3xl border border-neutral-100 shadow-xl space-y-6">
+            <div className="flex items-center gap-3 border-b border-neutral-100 pb-4">
+              <span className="text-base">🗓</span>
+              <h2 className="text-xs font-bold uppercase tracking-[0.2em] text-[#C5A880]">Planning Général des Sessions</h2>
+            </div>
+            
+            <div className="admin-calendar-custom text-xs">
+              <FullCalendar
+                plugins={[dayGridPlugin, interactionPlugin]}
+                initialView="dayGridMonth"
+                locale="fr"
+                firstDay={1}
+                buttonText={{ today: "Aujourd'hui" }}
+                events={getCalendarEvents()}
+                eventClick={handleEventClick}
+                height="auto"
+              />
+            </div>
+            
+            <p className="text-[10px] text-neutral-400 italic text-center">
+              👉 Cliquez sur une session du calendrier pour charger la liste des élèves enregistrés.
+            </p>
+          </div>
 
-              <div className="space-y-2 max-h-[400px] overflow-y-auto pr-1">
-                {elevesInscrits.length === 0 ? (
-                  <p className="text-amber-500 italic py-4 text-center">Aucune inscription pour le moment.</p>
-                ) : (
-                  elevesInscrits.map(e => (
-                    <div key={e.id} className="bg-white text-black p-3 rounded-xs space-y-1 shadow-xs">
-                      <div className="flex justify-between font-bold text-xs">
-                        <span>{e.clientPrenom} {e.clientNom}</span>
-                        <span className="text-[9px] bg-amber-100 text-amber-800 px-1.5 rounded-sm">{e.statutPaiement}</span>
-                      </div>
-                      <p className="text-gray-500 text-[10px]">📧 {e.clientEmail}</p>
-                      <p className="text-gray-500 text-[10px]">📞 {e.clientPhone}</p>
-                      <p className="text-gray-400 text-[9px] pt-1 border-t border-gray-100">{e.clientAdresse}</p>
+          {/* LISTE D'ÉMARGEMENT */}
+          <div className="lg:col-span-4 bg-[#1C1A17] text-white p-6 sm:p-8 rounded-3xl shadow-2xl space-y-6 sticky top-28 border border-neutral-800">
+            <div className="flex items-center gap-3 border-b border-neutral-800 pb-4">
+              <span className="text-base">👥</span>
+              <h2 className="text-xs font-bold uppercase tracking-[0.2em] text-[#C5A880]">Liste d'Émargement</h2>
+            </div>
+            
+            {activeSessionInfo ? (
+              <div className="space-y-4">
+                <div className="bg-neutral-800/80 p-4 rounded-2xl border-l-4 border-[#C5A880]">
+                  <p className="font-semibold text-sm text-white">{activeSessionInfo.formationTitle}</p>
+                  <p className="text-[10px] text-[#C5A880] mt-1 tracking-wider uppercase font-medium">{activeSessionInfo.dateLabel}</p>
+                </div>
+
+                <div className="space-y-3 max-h-[420px] overflow-y-auto pr-1">
+                  {elevesInscrits.length === 0 ? (
+                    <div className="bg-neutral-800/40 p-6 rounded-2xl text-center border border-neutral-800">
+                      <p className="text-neutral-400 italic text-xs">Aucune inscription pour le moment.</p>
                     </div>
-                  ))
+                  ) : (
+                    elevesInscrits.map(e => (
+                      <div key={e.id} className="bg-white text-[#1C1A17] p-4 rounded-2xl space-y-2 shadow-md">
+                        <div className="flex justify-between items-center">
+                          <span className="font-semibold text-xs">{e.clientPrenom} {e.clientNom}</span>
+                          <span className="text-[9px] uppercase tracking-wider font-bold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full">
+                            {e.statutPaiement}
+                          </span>
+                        </div>
+                        <div className="text-[11px] text-neutral-500 font-light space-y-0.5">
+                          <p className="flex items-center gap-1.5">✉️ {e.clientEmail}</p>
+                          <p className="flex items-center gap-1.5">📞 {e.clientPhone}</p>
+                          <p className="text-[10px] text-neutral-400 pt-1.5 border-t border-neutral-100 mt-1">📍 {e.clientAdresse}</p>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            ) : (
+              <div className="py-16 text-center space-y-3">
+                <span className="text-2xl block opacity-40">👇</span>
+                <p className="text-neutral-400 italic text-xs font-light leading-relaxed">
+                  Sélectionnez une formation dans le calendrier pour consulter les participants.
+                </p>
+              </div>
+            )}
+          </div>
+        </section>
+
+        {/* SECTION GESTION DU CATALOGUE ET PLANIFICATION */}
+        <div className="grid lg:grid-cols-12 gap-8 items-start">
+          
+          {/* COLONNE FORMULAIRE & LISTE */}
+          <div className="lg:col-span-8 space-y-8">
+            
+            {/* FORMULAIRE Saisie / Édition */}
+            <form ref={formRef} onSubmit={handleSaveFormation} className="bg-white p-8 rounded-3xl border border-neutral-100 shadow-xl space-y-6">
+              <div className="flex justify-between items-center border-b border-neutral-100 pb-4">
+                <div className="flex items-center gap-3">
+                  <span className="text-base">✨</span>
+                  <h2 className="text-xs font-bold uppercase tracking-[0.2em] text-[#C5A880]">
+                    {isEditing ? "Modifier la Formation" : "Créer une Nouvelle Formation"}
+                  </h2>
+                </div>
+                {isEditing && (
+                  <button 
+                    type="button" 
+                    onClick={resetForm}
+                    className="text-[10px] uppercase tracking-wider text-neutral-400 hover:text-neutral-700 underline cursor-pointer"
+                  >
+                    Annuler l'édition
+                  </button>
                 )}
               </div>
-            </div>
-          ) : (
-            <p className="text-gray-400 italic text-center py-12">Cliquez sur une formation dans le calendrier pour voir les participants inscrits.</p>
-          )}
-        </div>
-      </section>
 
-      <div className="grid lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2 space-y-6">
-          <form onSubmit={handleSaveFormation} className="bg-white p-8 border space-y-4 shadow-sm">
-            <h2 className="text-sm font-bold uppercase mb-4 border-b pb-2">{isEditing ? "Modifier" : "Créer"} une formation</h2>
-            <div className="grid grid-cols-2 gap-4">
-              <input type="text" value={title} onChange={(e)=>setTitle(e.target.value)} placeholder="Titre de la formation" className="p-2 border" />
-              <input type="text" value={duration} onChange={(e)=>setDuration(e.target.value)} placeholder="Durée" className="p-2 border" />
-              <input type="text" value={price} onChange={(e)=>setPrice(e.target.value)} placeholder="Prix" className="p-2 border" />
-              <input type="number" value={acompte} onChange={(e)=>setAcompte(e.target.value)} placeholder="Acompte" className="p-2 border" />
-              <input 
-                type="number" 
-                value={maxPlaces} 
-                onChange={(e)=>setMaxPlaces(e.target.value)} 
-                placeholder="Places max (ex: 4)" 
-                className="p-2 border" 
-                min="1"
-              />
-            </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <input required type="text" value={title} onChange={(e)=>setTitle(e.target.value)} placeholder="Titre de la formation" className="p-3.5 bg-[#FAF9F6] border border-neutral-200 text-xs rounded-xl focus:outline-none focus:border-[#C5A880] transition-colors font-light" />
+                <input required type="text" value={duration} onChange={(e)=>setDuration(e.target.value)} placeholder="Durée (ex: 2 jours / 14h)" className="p-3.5 bg-[#FAF9F6] border border-neutral-200 text-xs rounded-xl focus:outline-none focus:border-[#C5A880] transition-colors font-light" />
+                <input required type="text" value={price} onChange={(e)=>setPrice(e.target.value)} placeholder="Prix total (€)" className="p-3.5 bg-[#FAF9F6] border border-neutral-200 text-xs rounded-xl focus:outline-none focus:border-[#C5A880] transition-colors font-light" />
+                <input required type="number" value={acompte} onChange={(e)=>setAcompte(e.target.value)} placeholder="Acompte requis (€)" className="p-3.5 bg-[#FAF9F6] border border-neutral-200 text-xs rounded-xl focus:outline-none focus:border-[#C5A880] transition-colors font-light" />
+                <input type="number" min="1" value={maxPlaces} onChange={(e)=>setMaxPlaces(e.target.value)} placeholder="Places max par session (ex: 4)" className="p-3.5 bg-[#FAF9F6] border border-neutral-200 text-xs rounded-xl focus:outline-none focus:border-[#C5A880] transition-colors font-light sm:col-span-2" />
+              </div>
 
-            <div className="border border-dashed border-gray-300 p-4 bg-gray-50 rounded-sm text-center">
-              <label htmlFor="file-upload" className="cursor-pointer bg-white hover:bg-institut-dark text-institut-dark hover:text-white border border-institut-dark px-4 py-2 rounded-xs font-semibold uppercase tracking-wider text-[10px] transition shadow-xs inline-block">
-                {imageFile ? "🔄 Changer d'image" : "📁 Choisir une image sur mon PC"}
-              </label>
-              <input 
-                id="file-upload" 
-                type="file" 
-                accept="image/*" 
-                onChange={(e) => {
-                  if (e.target.files && e.target.files.length > 0) {
-                    setImageFile(e.target.files[0]);
-                  }
-                }} 
-                className="hidden" 
-              />
-              {imageFile && <p className="text-[10px] text-gray-600 font-medium italic mt-2">Sélectionné : {imageFile.name}</p>}
-            </div>
+              {/* UPLOAD PHOTO */}
+              <div className="border border-dashed border-neutral-300 p-6 bg-[#FAF9F6] rounded-2xl text-center space-y-2">
+                <label htmlFor="file-upload" className="cursor-pointer bg-white hover:bg-[#1C1A17] text-[#1C1A17] hover:text-white border border-neutral-300 hover:border-[#1C1A17] px-5 py-2.5 rounded-xl font-semibold uppercase tracking-[0.15em] text-[10px] transition-all duration-300 shadow-2xs inline-block">
+                  {imageFile ? "🔄 Remplacer l'image" : "📷 Choisir une image illustrative"}
+                </label>
+                <input 
+                  id="file-upload" 
+                  type="file" 
+                  accept="image/*" 
+                  onChange={(e) => {
+                    if (e.target.files && e.target.files.length > 0) {
+                      setImageFile(e.target.files[0]);
+                    }
+                  }} 
+                  className="hidden" 
+                />
+                {imageFile && <p className="text-[11px] text-[#C5A880] font-medium italic">Sélectionné : {imageFile.name}</p>}
+                {!imageFile && imageUrl && <p className="text-[10px] text-neutral-400 italic">Une image existe déjà pour ce cursus.</p>}
+              </div>
 
-            <textarea rows={3} value={intro} onChange={(e)=>setIntro(e.target.value)} placeholder="Introduction" className="w-full p-2 border"></textarea>
-            <textarea rows={2} value={objectifs} onChange={(e)=>setObjectifs(e.target.value)} placeholder="Objectifs" className="w-full p-2 border"></textarea>
-            <textarea rows={6} value={program} onChange={(e)=>setProgram(e.target.value)} placeholder="Programme détaillé" className="w-full p-2 border font-mono"></textarea>
-            <div className="grid grid-cols-2 gap-4">
-               <textarea rows={3} value={prerequis} onChange={(e)=>setPrerequis(e.target.value)} placeholder="Pré-requis" className="p-2 border"></textarea>
-               <textarea rows={3} value={modalites} onChange={(e)=>setModalites(e.target.value)} placeholder="Modalités" className="p-2 border"></textarea>
-            </div>
-            <input type="text" value={evaluation} onChange={(e)=>setEvaluation(e.target.value)} placeholder="Évaluation" className="w-full p-2 border" />
-            <textarea rows={2} value={financement} onChange={(e)=>setFinancement(e.target.value)} placeholder="Financement" className="w-full p-2 border"></textarea>
-            <textarea rows={2} value={lesPlus} onChange={(e)=>setLesPlus(e.target.value)} placeholder="Les Plus" className="w-full p-2 border"></textarea>
-            <button type="submit" disabled={uploading} className="bg-institut-dark text-white px-6 py-3 uppercase font-bold hover:bg-institut-gold transition disabled:bg-gray-400">
-              {uploading ? "Transfert..." : "Enregistrer la formation"}
-            </button>
-          </form>
+              <textarea rows={3} value={intro} onChange={(e)=>setIntro(e.target.value)} placeholder="Présentation / Introduction globale" className="w-full p-3.5 bg-[#FAF9F6] border border-neutral-200 text-xs rounded-xl focus:outline-none focus:border-[#C5A880] transition-colors font-light resize-none"></textarea>
+              <textarea rows={2} value={objectifs} onChange={(e)=>setObjectifs(e.target.value)} placeholder="Objectif principal" className="w-full p-3.5 bg-[#FAF9F6] border border-neutral-200 text-xs rounded-xl focus:outline-none focus:border-[#C5A880] transition-colors font-light resize-none"></textarea>
+              <textarea rows={5} value={program} onChange={(e)=>setProgram(e.target.value)} placeholder="Programme détaillé (Un module par ligne)" className="w-full p-3.5 bg-[#FAF9F6] border border-neutral-200 text-xs rounded-xl focus:outline-none focus:border-[#C5A880] transition-colors font-mono resize-none"></textarea>
+              
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <textarea rows={2} value={prerequis} onChange={(e)=>setPrerequis(e.target.value)} placeholder="Pré-requis" className="p-3.5 bg-[#FAF9F6] border border-neutral-200 text-xs rounded-xl focus:outline-none focus:border-[#C5A880] transition-colors font-light resize-none"></textarea>
+                <textarea rows={2} value={modalites} onChange={(e)=>setModalites(e.target.value)} placeholder="Modalités pédagogiques" className="p-3.5 bg-[#FAF9F6] border border-neutral-200 text-xs rounded-xl focus:outline-none focus:border-[#C5A880] transition-colors font-light resize-none"></textarea>
+              </div>
 
-          <div className="bg-white p-6 border">
-            <h2 className="font-bold mb-4 uppercase">Catalogue Actuel</h2>
-            <div className="space-y-3">
-              {formations.map(f => (
-                <div key={f.id} className="p-4 bg-gray-50 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border">
-                  <div className="flex items-center gap-3">
-                    {f.imageUrl && <img src={f.imageUrl} className="w-10 h-10 object-cover rounded-xs border" alt="" />}
-                    <div>
-                      <span className="font-semibold block text-sm">{f.title}</span>
-                      <span className="text-[10px] text-gray-400">{f.duration}</span>
+              <input type="text" value={evaluation} onChange={(e)=>setEvaluation(e.target.value)} placeholder="Évaluation (ex: Examen pratique & théorie)" className="w-full p-3.5 bg-[#FAF9F6] border border-neutral-200 text-xs rounded-xl focus:outline-none focus:border-[#C5A880] transition-colors font-light" />
+              
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <textarea rows={2} value={financement} onChange={(e)=>setFinancement(e.target.value)} placeholder="Financement (FAFCEA, Qualiopi...)" className="p-3.5 bg-[#FAF9F6] border border-neutral-200 text-xs rounded-xl focus:outline-none focus:border-[#C5A880] transition-colors font-light resize-none"></textarea>
+                <textarea rows={2} value={lesPlus} onChange={(e)=>setLesPlus(e.target.value)} placeholder="Les + de la formation" className="p-3.5 bg-[#FAF9F6] border border-neutral-200 text-xs rounded-xl focus:outline-none focus:border-[#C5A880] transition-colors font-light resize-none"></textarea>
+              </div>
+
+              <button 
+                type="submit" 
+                disabled={uploading} 
+                className="w-full bg-[#1C1A17] hover:bg-[#C5A880] text-white font-semibold uppercase tracking-[0.2em] py-4 text-[11px] transition-all duration-500 rounded-xl shadow-lg hover:-translate-y-0.5 active:scale-95 disabled:bg-neutral-300 cursor-pointer"
+              >
+                {uploading ? "Envoi du fichier..." : isEditing ? "Mettre à jour le cursus" : "Créer le cursus"}
+              </button>
+            </form>
+
+            {/* CATALOGUE EXISTANT */}
+            <div className="bg-white p-8 rounded-3xl border border-neutral-100 shadow-xl space-y-6">
+              <div className="flex items-center gap-3 border-b border-neutral-100 pb-4">
+                <span className="text-base">📚</span>
+                <h2 className="text-xs font-bold uppercase tracking-[0.2em] text-[#C5A880]">Catalogue des Cursus ({formations.length})</h2>
+              </div>
+
+              <div className="space-y-3">
+                {formations.map(f => (
+                  <div key={f.id} className="p-4 bg-[#FAF9F6] flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 rounded-2xl border border-neutral-100 hover:border-neutral-200 transition-colors">
+                    <div className="flex items-center gap-4">
+                      {f.imageUrl && <img src={f.imageUrl} className="w-12 h-12 object-cover rounded-xl border border-white shadow-2xs" alt="" />}
+                      <div>
+                        <span className="font-semibold text-sm text-[#1C1A17] block">{f.title}</span>
+                        <span className="text-[10px] text-neutral-400 font-light">{f.duration} • {f.priceTotal} € (Acompte: {f.acompte} €)</span>
+                      </div>
                     </div>
+                    <button 
+                      onClick={()=>handleEditClick(f)} 
+                      className="text-[10px] font-semibold uppercase tracking-wider text-[#C5A880] hover:text-[#1C1A17] border border-[#C5A880]/30 hover:border-[#1C1A17] px-4 py-2 rounded-xl bg-white transition-all duration-300 cursor-pointer"
+                    >
+                      Éditer
+                    </button>
                   </div>
-                  <button onClick={()=>handleEditClick(f)} className="text-institut-gold font-bold underline">Editer</button>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
+
           </div>
+
+          {/* PLANIFICATION DES DATES DE SESSION */}
+          <div className="lg:col-span-4 bg-white p-8 rounded-3xl border border-neutral-100 shadow-xl space-y-6 sticky top-28">
+            <div className="flex items-center gap-3 border-b border-neutral-100 pb-4">
+              <span className="text-base">➕</span>
+              <h2 className="text-xs font-bold uppercase tracking-[0.2em] text-[#C5A880]">Ouvrir une Session</h2>
+            </div>
+
+            <form onSubmit={handleAddDate} className="space-y-5">
+              <div className="space-y-2">
+                <label className="block text-[10px] uppercase font-semibold tracking-wider text-neutral-500">Formation cible :</label>
+                <div className="relative">
+                  <select 
+                    value={selectedFormationId} 
+                    onChange={(e)=>setSelectedFormationId(e.target.value)} 
+                    className="w-full p-3.5 border border-neutral-200 text-xs bg-[#FAF9F6] text-[#1C1A17] rounded-xl focus:outline-none appearance-none focus:border-[#C5A880] transition-colors font-light cursor-pointer pr-10"
+                  >
+                    <option value="">-- Sélectionner --</option>
+                    {formations.map(f => <option key={f.id} value={f.id}>{f.title}</option>)}
+                  </select>
+                  <div className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-neutral-400 text-xs">▼</div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-2">
+                  <label className="block text-[10px] uppercase font-semibold tracking-wider text-neutral-500">Date de Début :</label>
+                  <input 
+                    type="date" 
+                    value={startDate} 
+                    onChange={(e) => setStartDate(e.target.value)} 
+                    className="w-full p-3 border border-neutral-200 text-xs bg-[#FAF9F6] rounded-xl focus:outline-none focus:border-[#C5A880] font-light" 
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="block text-[10px] uppercase font-semibold tracking-wider text-neutral-500">Date de Fin :</label>
+                  <input 
+                    type="date" 
+                    value={endDate} 
+                    onChange={(e) => setEndDate(e.target.value)} 
+                    className="w-full p-3 border border-neutral-200 text-xs bg-[#FAF9F6] rounded-xl focus:outline-none focus:border-[#C5A880] font-light" 
+                  />
+                </div>
+              </div>
+
+              <button 
+                type="submit" 
+                className="w-full bg-[#1C1A17] hover:bg-[#C5A880] text-white font-semibold uppercase tracking-[0.2em] py-4 text-[11px] transition-all duration-500 rounded-xl shadow-lg hover:-translate-y-0.5 active:scale-95 cursor-pointer"
+              >
+                Publier la session
+              </button>
+            </form>
+          </div>
+
         </div>
 
-        <div className="bg-white p-6 border h-fit sticky top-24 shadow-sm space-y-4">
-          <h2 className="font-bold uppercase border-b pb-2">🗓 Planifier une session</h2>
-          <form onSubmit={handleAddDate} className="space-y-4">
-            <div>
-              <label className="block font-semibold mb-1 text-gray-600">Formation cible :</label>
-              <select value={selectedFormationId} onChange={(e)=>setSelectedFormationId(e.target.value)} className="w-full p-2.5 border bg-white focus:outline-none">
-                <option value="">Sélectionner une formation</option>
-                {formations.map(f => <option key={f.id} value={f.id}>{f.title}</option>)}
-              </select>
-            </div>
-            <div className="grid grid-cols-2 gap-2">
-              <div>
-                <label className="block font-semibold mb-1 text-gray-600">Début :</label>
-                <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="w-full p-2 border bg-white" />
-              </div>
-              <div>
-                <label className="block font-semibold mb-1 text-gray-600">Fin :</label>
-                <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="w-full p-2 border bg-white" />
-              </div>
-            </div>
-            <button type="submit" className="w-full bg-institut-dark text-white py-3 font-bold uppercase hover:bg-institut-gold transition">Ajouter au calendrier</button>
-          </form>
-        </div>
       </div>
-
     </div>
   );
 }

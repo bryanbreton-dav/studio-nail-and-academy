@@ -71,3 +71,8 @@ export default defineConfig([
   },
 ])
 ```
+
+## Redeploy
+- firebase deploy --only functions
+- npm run build
+- firebase deploy --only hosting
