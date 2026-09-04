@@ -10,16 +10,16 @@ export default function DocumentationPage() {
 
   const faqData = [
     {
-      question: "Titre de la question 1 ?",
-      answer: "Insérez ici la réponse détaillée à la première question. Vous pouvez personnaliser ce texte selon vos besoins."
+      question: "Les formations nous donnent elles, le droit à un diplôme ?",
+      answer: "Bien sûr, à la fin de chaque formation, je vous délivre un certificat de formation."
     },
     {
-      question: "Titre de la question 2 ?",
-      answer: "Insérez ici la réponse détaillée à la deuxième question. Vous pouvez personnaliser ce texte selon vos besoins."
+      question: "Pour les formations finies y a-t-il un suivi ?",
+      answer: "Oui, je vous suis et vous pouvez toujours me contacter pour me poser vos questions et m’envoyer vos photos via une plateforme en ligne."
     },
     {
-      question: "Titre de la question 3 ?",
-      answer: "Insérez ici la réponse détaillée à la troisième question. Vous pouvez personnaliser ce texte selon vos besoins."
+      question: "Peut-on se faire financer ?",
+      answer: "Oui et non. La demande de financement via le FAFCEA est possible pour les indépendants. Renseignements sur fafcea.com. Par contre, je ne prends aucun financement, ni CPF ou autre organisme."
     }
   ];
 

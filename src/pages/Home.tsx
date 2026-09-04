@@ -151,109 +151,121 @@ export default function Home() {
       {/* ==========================================
           3. CATALOGUE
          ========================================== */}
-      <section id="formations" className="reveal max-w-7xl mx-auto px-6 py-16 scroll-mt-24">
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-neutral-100 pb-12 mb-16">
-          <div className="space-y-3">
+      <section
+        id="formations"
+        className="reveal relative py-20 px-6 scroll-mt-24 bg-cover bg-center bg-fixed"
+        style={{ backgroundImage: "url('/fond.jpg')" }}
+      >
+        {/* Voile d'assombrissement/adoucissement pour garder un bon contraste */}
+        <div className="absolute inset-0 bg-[#FAF9F6]/90 backdrop-blur-[2px]"></div>
 
-            <h2 className="text-3xl md:text-5xl font-extralight tracking-tight text-[#1C1A17]">Nos programmes de formation</h2>
+        <div className="relative z-10 max-w-7xl mx-auto">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-neutral-200/60 pb-12 mb-16">
+            <div className="space-y-3">
+              <h2 className="text-3xl md:text-5xl font-extralight tracking-tight text-[#1C1A17]">
+                Nos programmes de formation
+              </h2>
+            </div>
           </div>
-        </div>
 
-        {loading ? (
-          <div className="text-center py-24 text-xs uppercase tracking-widest text-neutral-400 animate-pulse">
-            Sélection de nos pièces maîtresses...
-          </div>
-        ) : formations.length === 0 ? (
-          <div className="text-center py-20 bg-white rounded-3xl border border-dashed border-neutral-200 shadow-sm">
-            <div className="text-3xl mb-4">🪞</div>
-            <p className="text-base text-neutral-500 italic font-light">Le catalogue se réinvente. Aucun programme publié pour le moment.</p>
-            <Link to="/admin" className="text-[11px] uppercase tracking-wider font-bold text-[#C5A880] mt-5 inline-block hover:underline">
-              Ouvrir le panneau d'administration →
-            </Link>
-          </div>
-        ) : (
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-10 lg:gap-12">
-            {formations.map((formation) => {
-              const premiereLigneProgramme = formation.program
-                ? formation.program.split('\n')[0]
-                : "Détails techniques complets disponibles dans le programme.";
+          {loading ? (
+            <div className="text-center py-24 text-xs uppercase tracking-widest text-neutral-400 animate-pulse">
+              Sélection de nos pièces maîtresses...
+            </div>
+          ) : formations.length === 0 ? (
+            <div className="text-center py-20 bg-white/80 backdrop-blur-md rounded-3xl border border-dashed border-neutral-200 shadow-sm">
+              <div className="text-3xl mb-4">🪞</div>
+              <p className="text-base text-neutral-500 italic font-light">
+                Le catalogue se réinvente. Aucun programme publié pour le moment.
+              </p>
+              <Link to="/admin" className="text-[11px] uppercase tracking-wider font-bold text-[#C5A880] mt-5 inline-block hover:underline">
+                Ouvrir le panneau d'administration →
+              </Link>
+            </div>
+          ) : (
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-10 lg:gap-12">
+              {formations.map((formation) => {
+                const premiereLigneProgramme = formation.program
+                  ? formation.program.split('\n')[0]
+                  : "Détails techniques complets disponibles dans le programme.";
 
-              return (
-                <div key={formation.id} className="group bg-white rounded-3xl shadow-sm hover:shadow-xl border border-neutral-100 flex flex-col transition-all duration-500 hover:-translate-y-1 overflow-hidden">
-                  <div className="h-72 overflow-hidden relative">
-                    <img
-                      src={formation.imageUrl || "https://images.unsplash.com/photo-1604654894610-df63bc536371?auto=format&fit=crop&w=600&q=80"}
-                      alt={formation.title || "Formation"}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
-                    />
-                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-500"></div>
-                    <span className="absolute top-6 left-6 inline-flex gap-2 bg-[#1C1A17]/80 backdrop-blur-sm text-white text-[10px] font-semibold px-3 py-1.5 rounded-full uppercase tracking-[0.15em]">
-                      ⏳ {formation.duration}
-                    </span>
-                  </div>
+                return (
+                  <div key={formation.id} className="group bg-white/95 backdrop-blur-sm rounded-3xl shadow-sm hover:shadow-xl border border-neutral-100 flex flex-col transition-all duration-500 hover:-translate-y-1 overflow-hidden">
+                    <div className="h-72 overflow-hidden relative">
+                      <img
+                        src={formation.imageUrl || "https://images.unsplash.com/photo-1604654894610-df63bc536371?auto=format&fit=crop&w=600&q=80"}
+                        alt={formation.title || "Formation"}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
+                      />
+                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-500"></div>
+                      <span className="absolute top-6 left-6 inline-flex gap-2 bg-[#1C1A17]/80 backdrop-blur-sm text-white text-[10px] font-semibold px-3 py-1.5 rounded-full uppercase tracking-[0.15em]">
+                        ⏳ {formation.duration}
+                      </span>
+                    </div>
 
-                  <div className="p-8 md:p-10 flex-grow flex flex-col justify-between space-y-6">
-                    <div className="space-y-4">
-                      <div className="flex justify-between items-center gap-4 pt-1">
-                        <span className="text-[10px] font-black uppercase tracking-[0.25em] text-[#C5A880]">
-                          SNA • Certification
-                        </span>
-                        <span className="text-lg md:text-xl font-bold tracking-tight text-[#1C1A17]">
-                          {formation.priceTotal} €
-                        </span>
-                      </div>
+                    <div className="p-8 md:p-10 flex-grow flex flex-col justify-between space-y-6">
+                      <div className="space-y-4">
+                        <div className="flex justify-between items-center gap-4 pt-1">
+                          <span className="text-[10px] font-black uppercase tracking-[0.25em] text-[#C5A880]">
+                            SNA • Certification
+                          </span>
+                          <span className="text-lg md:text-xl font-bold tracking-tight text-[#1C1A17]">
+                            {formation.priceTotal} €
+                          </span>
+                        </div>
 
-                      <h3 className="text-xl md:text-2xl font-light text-[#1C1A17] leading-snug min-h-[60px] line-clamp-2 transition-colors duration-300">
-                        {formation.title}
-                      </h3>
+                        <h3 className="text-xl md:text-2xl font-light text-[#1C1A17] leading-snug min-h-[60px] line-clamp-2 transition-colors duration-300">
+                          {formation.title}
+                        </h3>
 
-                      <p className="text-sm text-neutral-600 leading-relaxed line-clamp-3 font-light pt-2">
-                        {premiereLigneProgramme}
-                      </p>
+                        <p className="text-sm text-neutral-600 leading-relaxed line-clamp-3 font-light pt-2">
+                          {premiereLigneProgramme}
+                        </p>
 
-                      <div className="pt-5 border-t border-neutral-100 space-y-2.5">
-                        <span className="text-[10px] uppercase tracking-wider font-semibold text-neutral-400 block">
-                          Ouverture des sessions :
-                        </span>
-                        <div className="flex flex-wrap gap-2 pt-1">
-                          {!formation.dates || formation.dates.length === 0 ? (
-                            <span className="text-xs text-neutral-400 italic font-light">Sur liste d'attente</span>
-                          ) : (
-                            formation.dates.slice(0, 1).map((date, i) => (
-                              <span key={i} className="inline-flex gap-2 items-center bg-[#FAF9F6] border border-neutral-100 text-[#1C1A17] text-[10px] px-3 py-1.5 rounded-full font-light shadow-2xs">
-                                ✨ {date}
+                        <div className="pt-5 border-t border-neutral-100 space-y-2.5">
+                          <span className="text-[10px] uppercase tracking-wider font-semibold text-neutral-400 block">
+                            Ouverture des sessions :
+                          </span>
+                          <div className="flex flex-wrap gap-2 pt-1">
+                            {!formation.dates || formation.dates.length === 0 ? (
+                              <span className="text-xs text-neutral-400 italic font-light">Sur liste d'attente</span>
+                            ) : (
+                              formation.dates.slice(0, 1).map((date, i) => (
+                                <span key={i} className="inline-flex gap-2 items-center bg-[#FAF9F6] border border-neutral-100 text-[#1C1A17] text-[10px] px-3 py-1.5 rounded-full font-light shadow-2xs">
+                                  ✨ {date}
+                                </span>
+                              ))
+                            )}
+                            {formation.dates && formation.dates.length > 1 && (
+                              <span className="text-[10px] text-neutral-400 self-center font-light pl-1">
+                                +{formation.dates.length - 1} autre{formation.dates.length > 2 ? 's' : ''} date{formation.dates.length > 2 ? 's' : ''}
                               </span>
-                            ))
-                          )}
-                          {formation.dates && formation.dates.length > 1 && (
-                            <span className="text-[10px] text-neutral-400 self-center font-light pl-1">
-                              +{formation.dates.length - 1} autre{formation.dates.length > 2 ? 's' : ''} date{formation.dates.length > 2 ? 's' : ''}
-                            </span>
-                          )}
+                            )}
+                          </div>
                         </div>
                       </div>
-                    </div>
 
-                    <div className="pt-6">
-                      <Link
-                        to={`/formation/${formation.id}`}
-                        className="block text-center bg-[#1C1A17] hover:bg-[#C5A880] text-white text-[11px] uppercase font-semibold tracking-[0.2em] py-4 transition-all duration-500 rounded-xl shadow-md transform hover:-translate-y-0.5 active:scale-95"
-                      >
-                        Consulter & Réserver
-                      </Link>
+                      <div className="pt-6">
+                        <Link
+                          to={`/formation/${formation.id}`}
+                          className="block text-center bg-[#1C1A17] hover:bg-[#C5A880] text-white text-[11px] uppercase font-semibold tracking-[0.2em] py-4 transition-all duration-500 rounded-xl shadow-md transform hover:-translate-y-0.5 active:scale-95"
+                        >
+                          Consulter & Réserver
+                        </Link>
+                      </div>
                     </div>
                   </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
+                );
+              })}
+            </div>
+          )}
+        </div>
       </section>
 
       {/* ==========================================
           4. FOOTER
          ========================================== */}
-      <footer className="reveal bg-[#1C1A17] text-white mt-16 border-t border-neutral-900">
+      <footer className="reveal bg-[#1C1A17] text-white border-t border-neutral-900">
         <div className="max-w-7xl mx-auto px-6 py-12 md:py-16">
 
           {/* NOUVELLE SECTION : CERTIFICATIONS & FINANCEMENTS */}
