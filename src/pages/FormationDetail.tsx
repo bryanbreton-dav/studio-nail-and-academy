@@ -7,7 +7,7 @@ import { doc, getDoc, collection, addDoc, getDocs, query, where, type DocumentDa
 import { loadStripe, type StripeElementsOptions } from '@stripe/stripe-js';
 import { Elements, useStripe, useElements, PaymentElement } from '@stripe/react-stripe-js';
 
-const stripePromise = loadStripe('pk_test_51TWYLHACwq5EuLNNbv6lPGtm3YlUbuxdo6hzQc2bmfsJ1xz7SZYIQcXTU1kqT9a8mN1qDs9P0mxDhoKwU2QsMVgH00cslvgugn');
+const stripePromise = loadStripe('pk_test_51UBatmAuqCScog0zSDOdLfjg9ooOhD03b04y3dXCp5F9KOHNSSHxLt42hS9Q7PPz8yYLpfholqGtJNJ5IpYUHzZg00CU0LjynL');
 
 // 1. DÉFINITION DES INTERFACES
 interface Formation {

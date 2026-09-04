@@ -73,6 +73,7 @@ export default defineConfig([
 ```
 
 ## Redeploy
+Mettre le stripe sk
 - firebase deploy --only functions
 - npm run build
 - firebase deploy --only hosting

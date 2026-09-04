@@ -5,6 +5,7 @@ import Stripe from "stripe";
 // --- CONFIGURATION STRIPE ---
 const getStripeInstance = () => {
   const secretKey = process.env.STRIPE_SECRET_KEY;
+
   if (!secretKey) {
     throw new Error("La clé secrète STRIPE_SECRET_KEY est manquante dans l'environnement.");
   }
@@ -12,6 +13,33 @@ const getStripeInstance = () => {
     apiVersion: "2023-10-16" as any,
   });
 };
+
+// HELPER INTERNE POUR L'API BREVO
+const callBrevoAPI = async (payload: any, apiKey: string) => {
+  const response = await fetch("https://api.brevo.com/v3/smtp/email", {
+    method: "POST",
+    headers: {
+      "accept": "application/json",
+      "api-key": apiKey,
+      "content-type": "application/json"
+    },
+    body: JSON.stringify(payload)
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(`Erreur API Brevo: ${JSON.stringify(errorData)}`);
+  }
+};
+
+// CONSTANTES E-MAILS
+const PERSO_EMAIL_SENDER = "contact@la-maison-du-port.fr";
+const ADMIN_EMAIL_RECEIVER = "pro.bryanbreton@gmail.com";
+const EXPEDITEUR_DEFAUT = {
+  name: "StudioNail & Academy",
+  email: PERSO_EMAIL_SENDER
+};
+
 
 // --- FONCTION 1 : INTENT DE PAIEMENT STRIPE ---
 export const createPaymentIntent = functions.https.onRequest(
@@ -57,11 +85,12 @@ export const createPaymentIntent = functions.https.onRequest(
   }
 );
 
-// --- FONCTION 2 : ENVOI DES MAILS VIA BREVO (API DIRECTE) ---
+
+// --- FONCTION 2 : ENVOI DES MAILS DE RÉSERVATION ---
 export const sendReservationEmails = functions.https.onRequest(
-  { secrets: ["BREVO_API_KEY"] }, // <-- Firebase injecte la clé ici de manière sécurisée
+  { secrets: ["BREVO_API_KEY"] },
   async (req: Request, res: Response): Promise<void> => {
-    
+
     res.set("Access-Control-Allow-Origin", "*");
     res.set("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
     res.set("Access-Control-Allow-Headers", "Content-Type");
@@ -72,57 +101,29 @@ export const sendReservationEmails = functions.https.onRequest(
     }
 
     try {
-      const { 
-        clientEmail, 
-        clientPrenom, 
-        clientNom, 
-        formationTitle, 
-        dateSession, 
-        acompteAmount 
+      const {
+        clientEmail,
+        clientPrenom,
+        clientNom,
+        formationTitle,
+        dateSession,
+        acompteAmount
       } = req.body;
 
-      // Validation des données reçues
       if (!clientEmail || !clientPrenom || !formationTitle || !dateSession) {
         res.status(400).send({ error: "Données requises manquantes." });
         return;
       }
 
-      const apiKey = process.env.BREVO_API_KEY;
+      const apiKey = "";
       if (!apiKey) {
         res.status(500).send({ error: "Clé API Brevo manquante dans l'environnement serveur." });
         return;
       }
 
-      // Configuration de tes adresses de test
-      const PERSO_EMAIL_SENDER = "pro.bryanbreton@gmail.com"; 
-      const ADMIN_EMAIL_RECEIVER = "rozennathalie@yahoo.fr";
-
-      const expediteur = { 
-        name: "Institut de Formation", 
-        email: PERSO_EMAIL_SENDER 
-      };
-
-      // Fonction interne pour appeler l'API HTTP de Brevo
-      const callBrevoAPI = async (payload: any) => {
-        const response = await fetch("https://api.brevo.com/v3/smtp/email", {
-          method: "POST",
-          headers: {
-            "accept": "application/json",
-            "api-key": apiKey,
-            "content-type": "application/json"
-          },
-          body: JSON.stringify(payload)
-        });
-
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(`Erreur API Brevo: ${JSON.stringify(errorData)}`);
-        }
-      };
-
-      // 1. Structure du mail destiné au Client
+      // 1. Mail destiné au Client
       const emailClient = {
-        sender: expediteur,
+        sender: EXPEDITEUR_DEFAUT,
         to: [{ email: clientEmail, name: `${clientPrenom} ${clientNom}` }],
         subject: `Confirmation de votre réservation : ${formationTitle}`,
         htmlContent: `
@@ -141,9 +142,9 @@ export const sendReservationEmails = functions.https.onRequest(
         `
       };
 
-      // 2. Structure du mail destiné à l’Hôte (Toi)
+      // 2. Mail destiné à l’Hôte (Admin)
       const emailAdmin = {
-        sender: expediteur,
+        sender: EXPEDITEUR_DEFAUT,
         to: [{ email: ADMIN_EMAIL_RECEIVER, name: "Administrateur" }],
         subject: `🚨 Nouvelle inscription ! - ${formationTitle}`,
         htmlContent: `
@@ -161,15 +162,102 @@ export const sendReservationEmails = functions.https.onRequest(
         `
       };
 
-      // Envoi des deux e-mails en parallèle
       await Promise.all([
-        callBrevoAPI(emailClient),
-        callBrevoAPI(emailAdmin)
+        callBrevoAPI(emailClient, apiKey),
+        callBrevoAPI(emailAdmin, apiKey)
       ]);
 
-      res.status(200).send({ success: true, message: "E-mails envoyés avec succès." });
+      res.status(200).send({ success: true, message: "E-mails de réservation envoyés avec succès." });
     } catch (error: any) {
-      console.error("Erreur d'envoi Brevo:", error);
+      console.error("Erreur d'envoi Brevo (Réservation):", error);
+      res.status(500).send({ error: error.message });
+    }
+  }
+);
+
+
+// --- FONCTION 3 : ENVOI DES MAILS DU FORMULAIRE DE CONTACT ---
+export const sendContactEmail = functions.https.onRequest(
+  { secrets: ["BREVO_API_KEY"] },
+  async (req: Request, res: Response): Promise<void> => {
+
+    res.set("Access-Control-Allow-Origin", "*");
+    res.set("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+    res.set("Access-Control-Allow-Headers", "Content-Type");
+
+    if (req.method === "OPTIONS") {
+      res.status(204).send("");
+      return;
+    }
+
+    try {
+      const { name, email, phone, message } = req.body;
+
+      if (!name || !email || !message) {
+        res.status(400).send({ error: "Le nom, l'e-mail et le message sont requis." });
+        return;
+      }
+
+      const apiKey = process.env.BREVO_API_KEY;
+      if (!apiKey) {
+        res.status(500).send({ error: "Clé API Brevo manquante dans l'environnement serveur." });
+        return;
+      }
+
+      const formattedMessage = message.replace(/\n/g, "<br/>");
+
+      // 1. Mail de notification pour l'Admin avec replyTo direct vers le client
+      const emailAdmin = {
+        sender: EXPEDITEUR_DEFAUT,
+        to: [{ email: ADMIN_EMAIL_RECEIVER, name: "Administrateur StudioNail" }],
+        replyTo: { email: email, name: name },
+        subject: `📩 Nouveau message de contact : ${name}`,
+        htmlContent: `
+          <html>
+            <body style="font-family: sans-serif; color: #333; line-height: 1.6;">
+              <h2 style="color: #C5A880;">Nouveau message depuis le formulaire de contact</h2>
+              <p><strong>Nom :</strong> ${name}</p>
+              <p><strong>E-mail :</strong> <a href="mailto:${email}">${email}</a></p>
+              <p><strong>Téléphone :</strong> ${phone || "Non renseigné"}</p>
+              <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;"/>
+              <p><strong>Message :</strong></p>
+              <blockquote style="background: #faf9f6; padding: 15px; border-left: 4px solid #C5A880; margin: 0;">
+                ${formattedMessage}
+              </blockquote>
+              <br/>
+              <p style="font-size: 12px; color: #777;">Astuce : Cliquez simplement sur "Répondre" dans votre boîte mail pour écrire directement à ${name}.</p>
+            </body>
+          </html>
+        `
+      };
+
+      // 2. Accusé de réception automatique au client
+      const emailClient = {
+        sender: EXPEDITEUR_DEFAUT,
+        to: [{ email: email, name: name }],
+        subject: "Bien reçu ! Votre message à StudioNail & Academy",
+        htmlContent: `
+          <html>
+            <body style="font-family: sans-serif; color: #333; line-height: 1.6;">
+              <h2>Bonjour ${name},</h2>
+              <p>Nous avons bien reçu votre message et nous vous en remercions.</p>
+              <p>Notre équipe traite votre demande et vous recontactera dans les plus brefs délais.</p>
+              <br/>
+              <p>Bien cordialement,</p>
+              <p><strong>L'équipe StudioNail & Academy</strong></p>
+            </body>
+          </html>
+        `
+      };
+
+      await Promise.all([
+        callBrevoAPI(emailAdmin, apiKey),
+        callBrevoAPI(emailClient, apiKey)
+      ]);
+
+      res.status(200).send({ success: true, message: "Message de contact envoyé avec succès." });
+    } catch (error: any) {
+      console.error("Erreur d'envoi Brevo (Contact):", error);
       res.status(500).send({ error: error.message });
     }
   }

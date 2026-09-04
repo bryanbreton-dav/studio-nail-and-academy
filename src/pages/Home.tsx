@@ -18,6 +18,24 @@ export default function Home() {
   const [formations, setFormations] = useState<Formation[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // Images du dossier public pour le carrousel d'arrière-plan
+  const bgImages = [
+    '/bg-image-1.jpeg',
+    '/bg-image-2.jpeg',
+    '/bg-image-3.jpeg',
+  ];
+
+  const [currentBgIndex, setCurrentBgIndex] = useState(0);
+
+  // Animation pour alterner les images toutes les 5 secondes
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentBgIndex((prevIndex) => (prevIndex + 1) % bgImages.length);
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, [bgImages.length]);
+
   useEffect(() => {
     const loadFormations = async () => {
       try {
@@ -45,23 +63,33 @@ export default function Home() {
           1. HERO SECTION
          ========================================== */}
       <section className="relative h-screen min-h-[650px] flex items-center justify-center px-4 overflow-hidden border-b border-neutral-100">
-        <div
-          className="absolute inset-0 bg-cover bg-center scale-105 animate-[subtle-zoom_20s_infinite_alternate]"
-          style={{ backgroundImage: "url('https://images.unsplash.com/photo-1604654894610-df63bc536371?auto=format&fit=crop&w=2000&q=90')" }}
-        ></div>
-        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/50 to-white/10"></div>
+        
+        {/* Carrousel d'images d'arrière-plan avec fondu */}
+        {bgImages.map((image, index) => (
+          <div
+            key={image}
+            className={`absolute inset-0 bg-cover bg-center scale-105 animate-[subtle-zoom_20s_infinite_alternate] transition-opacity duration-1000 ease-in-out ${
+              index === currentBgIndex ? 'opacity-100' : 'opacity-0'
+            }`}
+            style={{ backgroundImage: `url('${image}')` }}
+          ></div>
+        ))}
+
+        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/50 to-white/10 z-0"></div>
         
         <div className="relative z-10 text-center space-y-6 max-w-5xl mx-auto text-white">
-          <span className="inline-flex gap-2 bg-white/10 backdrop-blur-sm text-[#E6DCD2] text-[10px] font-semibold px-4 py-2 rounded-full uppercase tracking-[0.3em] mb-2 animate-fade-in">
-            ✨ Studio Nail Academy
-          </span>
+          
           <h1 className="text-4xl sm:text-6xl md:text-7xl font-extralight tracking-tight leading-[1.1] text-white">
-            L'art du détail, <br />
-            <span className="font-serif italic text-[#C5A880]">l'excellence</span> au bout des doigts.
+            La maitrise du geste, l'exigence de la qualité.
           </h1>
-          <p className="text-sm md:text-base font-light max-w-xl mx-auto opacity-80 leading-relaxed tracking-wide text-neutral-200">
-            Centre de formation haute technicité dédié aux futur·e·s professionnel·le·s du stylisme ongulaire exigeant·e·s.
-          </p>
+          <div className="p-4 sm:p-6 max-w-2xl mx-auto">
+            <p className="text-base sm:text-lg font-normal text-white leading-relaxed tracking-wide drop-shadow-md">
+              Centre de formation en Prothésie Ongulaire dédié aux débutantes et aux professionnelles, souhaitant apprendre, se perfectionner et maîtriser les dernières techniques du métier.<br/>
+              <span className="block mt-2 font-medium text-[#E6DCD2]">
+                Formatrice diplômée d'un Master en onglerie auprès d'expertes internationales.
+              </span>
+            </p>
+          </div>
           <div className="pt-8">
             <a 
               href="#formations" 
@@ -84,9 +112,6 @@ export default function Home() {
       <section id="me" className="reveal max-w-6xl mx-auto px-6 py-20 md:py-28 grid md:grid-cols-12 gap-12 items-center">
         <div className="md:col-span-7 space-y-8 z-10">
           <div className="space-y-3">
-            <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#C5A880] block">
-              👋 Faisons connaissance
-            </span>
             <h2 className="text-3xl md:text-5xl font-extralight tracking-tight text-[#1C1A17] leading-tight">
               Mon parcours et ma vision <br />
               <span className="font-serif italic text-[#C5A880]">en quelques mots</span>
@@ -130,14 +155,9 @@ export default function Home() {
       <section id="formations" className="reveal max-w-7xl mx-auto px-6 py-16 scroll-mt-24">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-neutral-100 pb-12 mb-16">
           <div className="space-y-3">
-            <span className="inline-flex gap-2 bg-[#C5A880]/10 text-[#C5A880] text-[10px] font-semibold px-3 py-1 rounded-full uppercase tracking-[0.2em] mb-2">
-              💎 Cursus d'exception
-            </span>
-            <h2 className="text-3xl md:text-5xl font-extralight tracking-tight text-[#1C1A17]">Nos Programmes d'Élite</h2>
+            
+            <h2 className="text-3xl md:text-5xl font-extralight tracking-tight text-[#1C1A17]">Nos programmes de formation</h2>
           </div>
-          <p className="text-neutral-500 text-sm font-light max-w-sm leading-relaxed">
-            Chaque cursus fait l'objet d'une certification stricte et ouvre droit aux financements d'État.
-          </p>
         </div>
 
         {loading ? (
@@ -208,7 +228,7 @@ export default function Home() {
                           )}
                           {formation.dates && formation.dates.length > 1 && (
                             <span className="text-[10px] text-neutral-400 self-center font-light pl-1">
-                              +{formation.dates.length - 1} autre date{formation.dates.length > 2 ? 's' : ''}
+                              +{formation.dates.length - 1} autre{formation.dates.length > 2 ? 's' : ''} date{formation.dates.length > 2 ? 's' : ''}
                             </span>
                           )}
                         </div>
@@ -232,10 +252,48 @@ export default function Home() {
       </section>
 
       {/* ==========================================
-          4. FOOTER (CORRECTION 2 : Marge et padding réduits)
+          4. FOOTER
          ========================================== */}
       <footer className="reveal bg-[#1C1A17] text-white mt-16 border-t border-neutral-900">
         <div className="max-w-7xl mx-auto px-6 py-12 md:py-16">
+          
+          {/* NOUVELLE SECTION : CERTIFICATIONS & FINANCEMENTS */}
+          <div className="mb-12 pb-10 border-b border-neutral-800">
+            <div className="flex flex-col md:flex-row items-center justify-between gap-6 bg-neutral-900/50 border border-neutral-800 p-6 md:p-8 rounded-3xl">
+              <div className="space-y-2 text-center md:text-left">
+                <span className="text-[10px] font-black uppercase tracking-[0.3em] text-[#C5A880] block">
+                  Gage de qualité & Prise en charge
+                </span>
+                <h4 className="text-xl md:text-2xl font-light text-white">
+                  Centre de Formation Certifié
+                </h4>
+                <p className="text-xs text-neutral-400 font-light max-w-xl leading-relaxed">
+                  Notre organisme répond aux exigences de qualité nationales. Nos formations sont éligibles aux financements via les fonds d'assurance formation.
+                </p>
+              </div>
+
+              <div className="flex flex-wrap justify-center items-center gap-4 sm:gap-6 pt-2 md:pt-0">
+                {/* Badge Qualiopi */}
+                <div className="flex items-center gap-3 bg-neutral-900 border border-neutral-700/60 px-5 py-3 rounded-2xl shadow-inner">
+                  <span className="text-xl">🎓</span>
+                  <div className="text-left">
+                    <span className="text-xs font-bold tracking-wide text-white block">Certifié QUALIOPI</span>
+                    <span className="text-[9px] uppercase tracking-wider text-[#C5A880] block">Action de formation</span>
+                  </div>
+                </div>
+
+                {/* Badge FAFCEA */}
+                <div className="flex items-center gap-3 bg-neutral-900 border border-neutral-700/60 px-5 py-3 rounded-2xl shadow-inner">
+                  <span className="text-xl">🏛️</span>
+                  <div className="text-left">
+                    <span className="text-xs font-bold tracking-wide text-white block">Éligible FAFCEA</span>
+                    <span className="text-[9px] uppercase tracking-wider text-[#C5A880] block">Financement Artisan</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <div className="grid md:grid-cols-12 gap-10 lg:gap-12 items-center">
 
             <div className="md:col-span-5 space-y-6">
@@ -248,7 +306,7 @@ export default function Home() {
 
               <div className="space-y-4 text-neutral-300 text-sm font-light tracking-wide leading-relaxed">
                 <p className="flex gap-4 border-b border-neutral-800 pb-3">
-                  <span className="text-[#C5A880] text-base">📍</span> Studio nails, Centre commercial de la Gesvrine, 44240 LA CHAPELLE SUR ERDRE
+                  <span className="text-[#C5A880] text-base">📍</span> Studionail and academy, Centre commercial de la Gesvrine, 44240 LA CHAPELLE SUR ERDRE
                 </p>
                 <a href="tel:0672188165" className="flex gap-4 border-b border-neutral-800 pb-3 hover:text-white transition-colors">
                   <span className="text-[#C5A880] text-base">📞</span> 06 72 18 81 65
