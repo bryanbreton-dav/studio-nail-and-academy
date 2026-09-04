@@ -44,7 +44,7 @@ export default function Home() {
           id: doc.id,
           ...doc.data()
         })) as Formation[];
-        
+
         setFormations(docs);
       } catch (error) {
         console.error("Erreur lors du chargement des formations :", error);
@@ -58,41 +58,40 @@ export default function Home() {
   return (
     // CORRECTION 1 : Retrait de "pt-[76px] md:pt-[88px]" pour coller parfaitement sous la navbar sticky
     <div className="bg-[#FAF9F6] text-[#1C1A17] font-sans selection:bg-[#E6DCD2] overflow-x-hidden">
-      
+
       {/* ==========================================
           1. HERO SECTION
          ========================================== */}
       <section className="relative h-screen min-h-[650px] flex items-center justify-center px-4 overflow-hidden border-b border-neutral-100">
-        
+
         {/* Carrousel d'images d'arrière-plan avec fondu */}
         {bgImages.map((image, index) => (
           <div
             key={image}
-            className={`absolute inset-0 bg-cover bg-center scale-105 animate-[subtle-zoom_20s_infinite_alternate] transition-opacity duration-1000 ease-in-out ${
-              index === currentBgIndex ? 'opacity-100' : 'opacity-0'
-            }`}
+            className={`absolute inset-0 bg-cover bg-center scale-105 animate-[subtle-zoom_20s_infinite_alternate] transition-opacity duration-1000 ease-in-out ${index === currentBgIndex ? 'opacity-100' : 'opacity-0'
+              }`}
             style={{ backgroundImage: `url('${image}')` }}
           ></div>
         ))}
 
         <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/50 to-white/10 z-0"></div>
-        
+
         <div className="relative z-10 text-center space-y-6 max-w-5xl mx-auto text-white">
-          
+
           <h1 className="text-4xl sm:text-6xl md:text-7xl font-extralight tracking-tight leading-[1.1] text-white">
             La maitrise du geste, l'exigence de la qualité.
           </h1>
           <div className="p-4 sm:p-6 max-w-2xl mx-auto">
             <p className="text-base sm:text-lg font-normal text-white leading-relaxed tracking-wide drop-shadow-md">
-              Centre de formation en Prothésie Ongulaire dédié aux débutantes et aux professionnelles, souhaitant apprendre, se perfectionner et maîtriser les dernières techniques du métier.<br/>
+              Centre de formation en Prothésie Ongulaire dédié aux débutantes et aux professionnelles, souhaitant apprendre, se perfectionner et maîtriser les dernières techniques du métier.<br />
               <span className="block mt-2 font-medium text-[#E6DCD2]">
                 Formatrice diplômée d'un Master en onglerie auprès d'expertes internationales.
               </span>
             </p>
           </div>
           <div className="pt-8">
-            <a 
-              href="#formations" 
+            <a
+              href="#formations"
               className="inline-block bg-[#1C1A17] hover:bg-[#C5A880] text-white px-10 py-4 text-[11px] uppercase tracking-[0.2em] font-semibold transition-all duration-500 rounded-xl shadow-lg transform hover:-translate-y-0.5 active:scale-95"
             >
               Explorer le catalogue
@@ -117,7 +116,7 @@ export default function Home() {
               <span className="font-serif italic text-[#C5A880]">en quelques mots</span>
             </h2>
           </div>
-          
+
           <div className="space-y-6 text-neutral-600 text-base md:text-lg font-light leading-relaxed text-justify">
             <p>
               Tout a commencé de l’autre côté. Et oui, j’ai moi aussi été cliente et ce jour fut pour moi une révélation ! J’ai démarré ma première formation en 2008. À cet instant, ce métier est devenu pour moi une vraie passion. J’ai monté mon premier institut et voulu me former auprès des meilleurs.
@@ -136,7 +135,7 @@ export default function Home() {
             </p>
           </div>
         </div>
-        
+
         <div className="md:col-span-5 relative justify-self-center md:justify-self-end w-full max-w-md mt-12 md:mt-0 sticky top-24">
           <div className="absolute inset-0 bg-[#E6DCD2] rounded-3xl translate-x-4 translate-y-4 -z-10 transition-transform duration-700 group-hover:translate-x-6 hover:shadow-2xl"></div>
           <div className="relative overflow-hidden rounded-2xl shadow-xl aspect-[3/4] bg-white border-4 border-white">
@@ -155,7 +154,7 @@ export default function Home() {
       <section id="formations" className="reveal max-w-7xl mx-auto px-6 py-16 scroll-mt-24">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-neutral-100 pb-12 mb-16">
           <div className="space-y-3">
-            
+
             <h2 className="text-3xl md:text-5xl font-extralight tracking-tight text-[#1C1A17]">Nos programmes de formation</h2>
           </div>
         </div>
@@ -256,7 +255,7 @@ export default function Home() {
          ========================================== */}
       <footer className="reveal bg-[#1C1A17] text-white mt-16 border-t border-neutral-900">
         <div className="max-w-7xl mx-auto px-6 py-12 md:py-16">
-          
+
           {/* NOUVELLE SECTION : CERTIFICATIONS & FINANCEMENTS */}
           <div className="mb-12 pb-10 border-b border-neutral-800">
             <div className="flex flex-col md:flex-row items-center justify-between gap-6 bg-neutral-900/50 border border-neutral-800 p-6 md:p-8 rounded-3xl">
@@ -275,7 +274,12 @@ export default function Home() {
               <div className="flex flex-wrap justify-center items-center gap-4 sm:gap-6 pt-2 md:pt-0">
                 {/* Badge Qualiopi */}
                 <div className="flex items-center gap-3 bg-neutral-900 border border-neutral-700/60 px-5 py-3 rounded-2xl shadow-inner">
-                  <span className="text-xl">🎓</span>
+                  {/* Remplacez '/qualiopi-logo.png' par le nom exact de votre image dans public/ */}
+                  <img
+                    src="/logoqualiopi.jpg"
+                    alt="Logo Qualiopi"
+                    className="h-8 w-auto object-contain"
+                  />
                   <div className="text-left">
                     <span className="text-xs font-bold tracking-wide text-white block">Certifié QUALIOPI</span>
                     <span className="text-[9px] uppercase tracking-wider text-[#C5A880] block">Action de formation</span>
@@ -311,8 +315,8 @@ export default function Home() {
                 <a href="tel:0672188165" className="flex gap-4 border-b border-neutral-800 pb-3 hover:text-white transition-colors">
                   <span className="text-[#C5A880] text-base">📞</span> 06 72 18 81 65
                 </a>
-                <a href="mailto:contact@studionailacademy.fr" className="flex gap-4 border-b border-neutral-800 pb-3 hover:text-white transition-colors">
-                  <span className="text-[#C5A880] text-base">✉️</span> contact@studionailacademy.fr
+                <a href="mailto:studionail.academy@yahoo.com" className="flex gap-4 border-b border-neutral-800 pb-3 hover:text-white transition-colors">
+                  <span className="text-[#C5A880] text-base">✉️</span> studionail.academy@yahoo.com
                 </a>
               </div>
 
@@ -340,7 +344,7 @@ export default function Home() {
             </div>
 
           </div>
-          
+
           <div className="text-center text-neutral-500 text-[10px] uppercase tracking-widest mt-10 pt-6 border-t border-neutral-900">
             © {new Date().getFullYear()} Studio Nail Academy. Tous droits réservés.
           </div>

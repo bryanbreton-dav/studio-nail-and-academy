@@ -109,7 +109,7 @@ function Navigation() {
           {/* LIEN TÉLÉPHONE & RÉSEAUX RS */}
           <div className="flex items-center space-x-3 normal-case font-normal text-sm">
             <a 
-              href="tel:0600000000" 
+              href="tel:0672188165" 
               className="flex items-center gap-1.5 text-[#1C1A17] hover:text-[#C5A880] transition-colors font-medium text-xs tracking-wider"
               title="Nous appeler"
             >
@@ -211,7 +211,7 @@ function Navigation() {
           {/* RÉSEAUX & TEL SUR MOBILE */}
           <div className="pt-4 flex items-center justify-between">
             <a 
-              href="tel:0600000000" 
+              href="tel:0672188165" 
               className="flex items-center gap-2 text-sm font-semibold text-[#1C1A17] hover:text-[#C5A880]"
             >
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-[#C5A880]" fill="none" viewBox="0 0 24 24" stroke="currentColor">

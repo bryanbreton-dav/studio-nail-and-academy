@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 
 export default function DocumentationPage() {
   // État pour gérer l'ouverture/fermeture des questions de la FAQ
@@ -80,7 +80,7 @@ export default function DocumentationPage() {
             <div className="pt-4">
               {/* Remplacez '/reglement-interieur.pdf' par le chemin exact vers votre fichier PDF */}
               <a 
-                href="/reglement-interieur.pdf" 
+                href="/reglement-interieur-2026.pdf" 
                 download
                 className="inline-flex items-center justify-center gap-3 w-full bg-[#C5A880] hover:bg-[#b5976f] text-[#1C1A17] font-medium text-sm py-3 px-6 rounded-2xl transition-all duration-300 shadow-md hover:shadow-lg"
               >
