@@ -32,42 +32,40 @@ function Navigation() {
     <nav className="bg-white/90 backdrop-blur-md shadow-sm sticky top-0 z-50 transition-all duration-300">
       <div className="max-w-6xl mx-auto px-4 h-20 flex items-center justify-between">
 
-        {/* LOGO (Taille ajustée pour éviter les chevauchements sur écran moyen) */}
-        <Link 
-          to="/" 
+        {/* LOGO */}
+        <Link
+          to="/"
           onClick={() => setIsMobileMenuOpen(false)}
-          className="text-base sm:text-xl font-bold tracking-widest text-[#1C1A17] hover:opacity-80 transition-opacity"
+          className="text-base sm:text-xl font-bold tracking-widest text-[#1C1A17] hover:opacity-80 transition-opacity whitespace-nowrap"
         >
           STUDIONAIL <span className="text-[#C5A880]">AND ACADEMY</span>
         </Link>
 
         {/* DESKTOP NAV */}
-        <div className="hidden md:flex items-center space-x-6 lg:space-x-8 text-xs uppercase tracking-widest font-semibold text-[#1C1A17]">
-          <Link to="/" className="hover:text-[#C5A880] transition-colors">
-            Accueil
-          </Link>
-          
-          <button 
-            onClick={() => handleAnchorClick('#me')} 
-            className="hover:text-[#C5A880] transition-colors cursor-pointer bg-transparent border-0 uppercase tracking-widest font-semibold"
+        <div className="hidden md:flex items-center space-x-4 lg:space-x-8 text-xs uppercase tracking-widest font-semibold text-[#1C1A17]">
+
+          {/* BOUTON QUI SUIS-JE ? (Forcé sur 1 seule ligne avec whitespace-nowrap) */}
+          <button
+            onClick={() => handleAnchorClick('#me')}
+            className="hover:text-[#C5A880] transition-colors cursor-pointer bg-transparent border-0 uppercase tracking-widest font-semibold whitespace-nowrap"
           >
-            Qui suis-je ?
+            Qui&nbsp;suis-je?
           </button>
-          
-          <button 
-            onClick={() => handleAnchorClick('#formations')} 
-            className="hover:text-[#C5A880] transition-colors cursor-pointer bg-transparent border-0 uppercase tracking-widest font-semibold"
+
+          <button
+            onClick={() => handleAnchorClick('#formations')}
+            className="hover:text-[#C5A880] transition-colors cursor-pointer bg-transparent border-0 uppercase tracking-widest font-semibold whitespace-nowrap"
           >
             Formations
           </button>
 
           {/* MENU DÉROULANT : FINANCEMENT & INFOS */}
-          <div 
+          <div
             className="relative"
             onMouseEnter={() => setIsDropdownOpen(true)}
             onMouseLeave={() => setIsDropdownOpen(false)}
           >
-            <button className="flex items-center gap-1 hover:text-[#C5A880] transition-colors py-2 uppercase tracking-widest font-semibold bg-transparent border-0">
+            <button className="flex items-center gap-1 hover:text-[#C5A880] transition-colors py-2 uppercase tracking-widest font-semibold bg-transparent border-0 whitespace-nowrap">
               <span>Financement & Infos</span>
               <svg className={`w-3.5 h-3.5 transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
@@ -77,15 +75,15 @@ function Navigation() {
             {/* CONTENU DROPDOWN */}
             {isDropdownOpen && (
               <div className="absolute top-full left-0 w-48 bg-white border border-neutral-100 shadow-xl rounded-xl py-2 animate-in fade-in slide-in-from-top-1 duration-200">
-                <Link 
-                  to="/guide-fafcea" 
+                <Link
+                  to="/guide-fafcea"
                   onClick={() => setIsDropdownOpen(false)}
                   className="block px-4 py-2.5 text-[11px] text-[#1C1A17] hover:bg-[#FAF9F6] hover:text-[#C5A880] transition-colors"
                 >
                   Guide FAFCEA
                 </Link>
-                <Link 
-                  to="/documentation" 
+                <Link
+                  to="/documentation"
                   onClick={() => setIsDropdownOpen(false)}
                   className="block px-4 py-2.5 text-[11px] text-[#1C1A17] hover:bg-[#FAF9F6] hover:text-[#C5A880] transition-colors"
                 >
@@ -95,22 +93,22 @@ function Navigation() {
             )}
           </div>
 
-          {/* FUTUR BOUTON / LIEN CONTACT */}
-          <button 
-            onClick={() => handleAnchorClick('/contact')} 
-            className="hover:text-[#C5A880] transition-colors cursor-pointer bg-transparent border-0 uppercase tracking-widest font-semibold"
+          {/* LIEN CONTACT */}
+          <Link
+            to="/contact"
+            className="hover:text-[#C5A880] transition-colors uppercase tracking-widest font-semibold whitespace-nowrap"
           >
             Contact
-          </button>
+          </Link>
 
           {/* SÉPARATEUR */}
           <div className="h-4 w-[1px] bg-neutral-200"></div>
 
           {/* LIEN TÉLÉPHONE & RÉSEAUX RS */}
-          <div className="flex items-center space-x-3 normal-case font-normal text-sm">
-            <a 
-              href="tel:0672188165" 
-              className="flex items-center gap-1.5 text-[#1C1A17] hover:text-[#C5A880] transition-colors font-medium text-xs tracking-wider"
+          <div className="flex items-center space-x-2 lg:space-x-3 normal-case font-normal text-sm">
+            <a
+              href="tel:0672188165"
+              className="flex items-center gap-1.5 text-[#1C1A17] hover:text-[#C5A880] transition-colors font-medium text-xs tracking-wider whitespace-nowrap"
               title="Nous appeler"
             >
               <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-[#C5A880]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -119,9 +117,9 @@ function Navigation() {
               <span>0672188165</span>
             </a>
 
-            <a 
-              href="https://www.instagram.com/studionail_academy" 
-              target="_blank" 
+            <a
+              href="https://www.instagram.com/studionail_academy"
+              target="_blank"
               rel="noreferrer"
               className="text-[#1C1A17] hover:text-[#C5A880] transition-colors p-1"
               aria-label="Instagram"
@@ -129,9 +127,9 @@ function Navigation() {
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
             </a>
 
-            <a 
-              href="https://www.facebook.com/StudioNail44" 
-              target="_blank" 
+            <a
+              href="https://www.facebook.com/StudioNail44"
+              target="_blank"
               rel="noreferrer"
               className="text-[#1C1A17] hover:text-[#C5A880] transition-colors p-1"
               aria-label="Facebook"
@@ -175,7 +173,7 @@ function Navigation() {
             onClick={() => handleAnchorClick('#me')}
             className="w-full text-left py-2.5 text-sm uppercase tracking-widest font-semibold text-[#1C1A17] border-b border-neutral-100 hover:text-[#C5A880]"
           >
-            Qui suis-je ?
+            Qui suis-je?
           </button>
 
           <button
@@ -201,17 +199,18 @@ function Navigation() {
             Documentation
           </Link>
 
-          <button
-            onClick={() => handleAnchorClick('/contact')}
-            className="w-full text-left py-2.5 text-sm uppercase tracking-widest font-semibold text-[#1C1A17] border-b border-neutral-100 hover:text-[#C5A880]"
+          <Link
+            to="/contact"
+            onClick={() => setIsMobileMenuOpen(false)}
+            className="block py-2.5 text-sm uppercase tracking-widest font-semibold text-[#1C1A17] border-b border-neutral-100 hover:text-[#C5A880]"
           >
             Contact
-          </button>
+          </Link>
 
           {/* RÉSEAUX & TEL SUR MOBILE */}
           <div className="pt-4 flex items-center justify-between">
-            <a 
-              href="tel:0672188165" 
+            <a
+              href="tel:0672188165"
               className="flex items-center gap-2 text-sm font-semibold text-[#1C1A17] hover:text-[#C5A880]"
             >
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-[#C5A880]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -221,19 +220,19 @@ function Navigation() {
             </a>
 
             <div className="flex space-x-3">
-              <a 
-                href="https://www.instagram.com/studionail_academy" 
-                target="_blank" 
-                rel="noreferrer" 
+              <a
+                href="https://www.instagram.com/studionail_academy"
+                target="_blank"
+                rel="noreferrer"
                 className="p-2 border border-neutral-200 rounded-full text-[#1C1A17] hover:text-[#C5A880]"
                 aria-label="Instagram"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
               </a>
-              <a 
-                href="https://www.facebook.com/StudioNail44" 
-                target="_blank" 
-                rel="noreferrer" 
+              <a
+                href="https://www.facebook.com/StudioNail44"
+                target="_blank"
+                rel="noreferrer"
                 className="p-2 border border-neutral-200 rounded-full text-[#1C1A17] hover:text-[#C5A880]"
                 aria-label="Facebook"
               >
